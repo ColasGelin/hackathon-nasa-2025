@@ -44,7 +44,7 @@ export default function InteractiveH2({ children, className = "" }: InteractiveH
   return (
     <h2
       ref={titleRef}
-      className={`text-4xl font-bold text-center mb-12 transition-all duration-500 ease-out cursor-pointer ${className}`}
+      className={`text-4xl font-bold text-center mb-12 transition-all duration-500 ease-out cursor-pointer text-white drop-shadow-lg ${className}`}
       style={{
         transform: `
           translateY(${isVisible ? '0' : '20px'}) 
@@ -53,7 +53,9 @@ export default function InteractiveH2({ children, className = "" }: InteractiveH
           scale(${isHovered ? 1.05 : 1})
         `,
         opacity: isVisible ? 1 : 0,
-        textShadow: isHovered ? `${mousePosition.x}px ${mousePosition.y}px 20px rgba(59, 130, 246, 0.3)` : 'none',
+        textShadow: isHovered 
+          ? `${mousePosition.x}px ${mousePosition.y}px 20px rgba(59, 130, 246, 0.5), 0 0 30px rgba(255, 255, 255, 0.3)` 
+          : '0 2px 4px rgba(0, 0, 0, 0.5)',
         perspective: '1000px',
       }}
       onMouseMove={handleMouseMove}

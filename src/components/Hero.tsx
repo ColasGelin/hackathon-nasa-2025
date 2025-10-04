@@ -29,8 +29,12 @@ export default function Hero() {
   const rotate = Math.sin(scrollY * 0.01) * 2
 
   return (
-    <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-500 via-orange-500 to-blue-500 relative overflow-hidden">
-      <div className="text-center text-white px-4 max-w-4xl">
+    <section className="min-h-screen flex items-center justify-center relative overflow-hidden">
+      {/* Diagonal gradient for Fighting Urban Heat Islands section */}
+      <div className="absolute inset-0 bg-gradient-to-br from-red-400 via-green-400 to-blue-400"></div>
+      {/* Overlay to maintain readability */}
+      <div className="absolute inset-0 bg-slate-900/50"></div>
+      <div className="text-center text-white px-4 max-w-4xl relative z-10">
         <h1 
           className="text-5xl md:text-7xl font-bold mb-6 will-change-transform"
           style={{
