@@ -66,7 +66,7 @@ export default function Hero() {
           Satellite intelligence for resilient cities
         </p>
         <a 
-          href="/project"
+          href="/theproject"
           className="inline-flex items-center bg-white text-slate-900 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-slate-100 hover:scale-105 transition-all duration-300 will-change-transform"
           style={{
             transform: `translate3d(0, ${parallaxY * 0.2}px, 0)`,
