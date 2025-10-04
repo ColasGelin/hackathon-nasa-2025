@@ -1,103 +1,138 @@
-import Image from "next/image";
+import Navbar from '@/components/Navbar'
+import Hero from '@/components/Hero'
+import StatCard from '@/components/StatCard'
+import Card from '@/components/Card'
+import Footer from '@/components/Footer'
+import { stats, impacts, satellites, malagaSolutions, solutionPillars } from '@/lib/data'
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="bg-slate-900 text-white">
+      <Navbar />
+      
+      {/* Hero Section */}
+      <Hero />
+      
+      {/* Problem Section */}
+      <section id="problem" className="py-16 px-4">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-4xl font-bold text-center mb-12">The Urban Heat Island Problem</h2>
+          
+          {/* Stats Grid */}
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
+            {stats.map((stat, index) => (
+              <StatCard key={index} value={stat.value} label={stat.label} />
+            ))}
+          </div>
+          
+          {/* Impacts Grid */}
+          <div className="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+            {impacts.map((impact, index) => (
+              <div key={index} className="flex items-center p-3 bg-slate-800 rounded-lg border border-slate-700">
+                <div className="w-2 h-2 bg-red-400 rounded-full mr-3"></div>
+                <span className="text-slate-300">{impact}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      
+      {/* Solution Section */}
+      <section id="solution" className="py-16 px-4 bg-slate-800">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-4xl font-bold text-center mb-12">Our AI Solution</h2>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {solutionPillars.map((pillar, index) => (
+              <Card 
+                key={index}
+                title={pillar.title}
+                description={pillar.description}
+                icon={
+                  <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                    {pillar.icon === 'satellite' && <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>}
+                    {pillar.icon === 'brain' && <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>}
+                    {pillar.icon === 'dashboard' && <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>}
+                  </svg>
+                }
+              />
+            ))}
+          </div>
+          
+          {/* Data Flow Diagram */}
+          <div className="flex items-center justify-center mt-12 space-x-8 text-center">
+            <div className="p-4 bg-blue-500 rounded-lg">Satellite Data</div>
+            <div className="text-blue-400">→</div>
+            <div className="p-4 bg-green-500 rounded-lg">Predictive AI</div>
+            <div className="text-blue-400">→</div>
+            <div className="p-4 bg-purple-500 rounded-lg">Urban Decisions</div>
+          </div>
+        </div>
+      </section>
+      
+      {/* Malaga Case Study */}
+      <section id="malaga" className="py-16 px-4">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-4xl font-bold text-center mb-12">Case Study: Málaga</h2>
+          
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <div className="aspect-video bg-slate-800 rounded-lg flex items-center justify-center border border-slate-700 mb-4">
+                <span className="text-slate-400">Málaga thermal map</span>
+              </div>
+              <p className="text-slate-300 text-center">Heat island mapping before intervention</p>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              {malagaSolutions.map((solution, index) => (
+                <div key={index} className="p-4 bg-slate-800 border border-slate-700 rounded-lg">
+                  <h4 className="font-semibold mb-2 text-green-400">{solution.title}</h4>
+                  <p className="text-sm text-slate-300">{solution.impact}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      {/* Technologies Section */}
+      <section className="py-16 px-4 bg-slate-800">
+        <div className="max-w-6xl mx-auto text-center">
+          <h2 className="text-4xl font-bold mb-12">Satellite Technologies</h2>
+          
+          <div className="grid md:grid-cols-3 gap-8 mb-12">
+            {satellites.map((satellite, index) => (
+              <div key={index} className="p-6 bg-slate-900 border border-slate-600 rounded-lg">
+                <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold mb-2">{satellite.name}</h3>
+                <p className="text-blue-400 mb-2">{satellite.res} • {satellite.type}</p>
+                <p className="text-slate-300 text-sm">{satellite.description}</p>
+              </div>
+            ))}
+          </div>
+          
+          <div className="flex items-center justify-center space-x-8 mb-8">
+            <span className="text-slate-400">Partners:</span>
+            <div className="flex space-x-6">
+              <div className="text-blue-400 font-bold">NASA</div>
+              <div className="text-blue-400 font-bold">ESA</div>
+            </div>
+          </div>
+          
+          <a 
+            href="/project"
+            className="inline-flex items-center bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
+            Access Demo →
           </a>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </section>
+      
+      <Footer />
     </div>
-  );
+  )
 }
