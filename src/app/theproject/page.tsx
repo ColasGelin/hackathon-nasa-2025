@@ -6,16 +6,17 @@ import { useState, useRef, useEffect } from 'react'
 import * as THREE from 'three'
 import { MinimalToggle, OrangeToggle } from '@/components/ui/toggle'
 
-function HeatMapBoxes({ placedCylinders }: { placedCylinders: THREE.Vector3[] }) {
+function HeatMapBoxes({ placedCylinders, selectedMonth, selectedYear, onTemperatureUpdate }: { placedCylinders: THREE.Vector3[], selectedMonth: string, selectedYear: string, onTemperatureUpdate?: (avgTemp: number) => void }) {
     const [temperatureData, setTemperatureData] = useState<number[]>([])
     const spheres = []
     const gridSize = 59
 
     const sphereRadius = Math.min(250 / gridSize, 220 / gridSize) * 0.2
 
-    // Load and parse CSV on mount
+    // Load and parse CSV when month or year changes
     useEffect(() => {
-        fetch('/temper_data.csv')
+        const fileName = `/processed/data_${selectedMonth}_${selectedYear}.csv`
+        fetch(fileName)
             .then(response => response.text())
             .then(csvText => {
                 const lines = csvText.trim().split('\n')
@@ -30,8 +31,17 @@ function HeatMapBoxes({ placedCylinders }: { placedCylinders: THREE.Vector3[] })
                 }
                 
                 setTemperatureData(temps)
+                
+                // Calculate and update average temperature
+                if (temps.length > 0 && onTemperatureUpdate) {
+                    const avgTemp = temps.reduce((sum, temp) => sum + temp, 0) / temps.length
+                    onTemperatureUpdate(Math.round(avgTemp * 10) / 10) // Round to 1 decimal
+                }
             })
-    }, [])
+            .catch(error => {
+                console.error('Error loading temperature data:', error)
+            })
+    }, [selectedMonth, selectedYear, onTemperatureUpdate])
 
     // Temperature range from CSV: min ~22, max ~44
     const minTemp = 22
@@ -95,12 +105,12 @@ function HeatMapBoxes({ placedCylinders }: { placedCylinders: THREE.Vector3[] })
     return <>{spheres}</>
 }
 
-function MalagaModel({ placedCylinders, showModel, showHeatmap }: { placedCylinders: THREE.Vector3[], showModel: boolean, showHeatmap: boolean }) {
+function MalagaModel({ placedCylinders, showModel, showHeatmap, selectedMonth, selectedYear, onTemperatureUpdate }: { placedCylinders: THREE.Vector3[], showModel: boolean, showHeatmap: boolean, selectedMonth: string, selectedYear: string, onTemperatureUpdate?: (avgTemp: number) => void }) {
   const { scene } = useGLTF('/models/malaga/scene.glb')
   return (
     <>
       {showModel && <primitive object={scene} position={[0, -3, 0]} scale={1}/>}
-      {showHeatmap && <HeatMapBoxes placedCylinders={placedCylinders} />}
+      {showHeatmap && <HeatMapBoxes placedCylinders={placedCylinders} selectedMonth={selectedMonth} selectedYear={selectedYear} onTemperatureUpdate={onTemperatureUpdate} />}
     </>
   )
 }
@@ -156,7 +166,7 @@ function MouseFollowCube({ isActive, onPlace }: { isActive: boolean, onPlace: (p
   )
 }
 
-function Scene({ showMouseCube, onPlaceCube, showModel, showHeatmap }: { showMouseCube: boolean, onPlaceCube: (position: THREE.Vector3) => void, showModel: boolean, showHeatmap: boolean }) {
+function Scene({ showMouseCube, onPlaceCube, showModel, showHeatmap, selectedMonth, selectedYear, onTemperatureUpdate }: { showMouseCube: boolean, onPlaceCube: (position: THREE.Vector3) => void, showModel: boolean, showHeatmap: boolean, selectedMonth: string, selectedYear: string, onTemperatureUpdate?: (avgTemp: number) => void }) {
   const [placedCubes, setPlacedCubes] = useState<THREE.Vector3[]>([])
   
   const handlePlaceCube = (position: THREE.Vector3) => {
@@ -187,7 +197,7 @@ function Scene({ showMouseCube, onPlaceCube, showModel, showHeatmap }: { showMou
         Welcome to our 3D Project
       </Text>
       
-      <MalagaModel placedCylinders={placedCubes} showModel={showModel} showHeatmap={showHeatmap} />
+      <MalagaModel placedCylinders={placedCubes} showModel={showModel} showHeatmap={showHeatmap} selectedMonth={selectedMonth} selectedYear={selectedYear} onTemperatureUpdate={onTemperatureUpdate} />
       
       <PlacedCubes cubes={placedCubes} />
       
@@ -277,6 +287,26 @@ export default function TheProject() {
   const [cityStats, setCityStats] = useState<CityStats | null>(null)
   const [showModel, setShowModel] = useState(true)
   const [showHeatmap, setShowHeatmap] = useState(true)
+  const [averageTemperature, setAverageTemperature] = useState<number>(18.5) // Default value
+  
+  // Available data mapping: year -> array of available months
+  const availableData: Record<string, string[]> = {
+    '2014': ['01', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'],
+    '2015': ['01', '02', '03', '05', '06', '07', '08', '09', '10', '11', '12'],
+    '2016': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'],
+    '2017': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'],
+    '2018': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'],
+    '2019': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'],
+    '2020': ['01', '02', '04', '05', '06', '07', '08', '09', '11', '12'],
+    '2021': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'],
+    '2022': ['01', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'],
+    '2023': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '11', '12'],
+    '2024': ['01', '02', '03', '04', '05', '06', '07', '08']
+  }
+  
+  // Default to latest available (August 2024)
+  const [selectedYear, setSelectedYear] = useState('2024')
+  const [selectedMonth, setSelectedMonth] = useState('08')
   
   useEffect(() => {
     fetch('/malagaStats.json')
@@ -287,6 +317,21 @@ export default function TheProject() {
   const handlePlaceCube = (position: THREE.Vector3) => {
     setShowMouseCube(false)
   }
+  
+  const handleYearChange = (year: string) => {
+    setSelectedYear(year)
+    // Set to first available month of the new year
+    const firstMonth = availableData[year][0]
+    setSelectedMonth(firstMonth)
+  }
+  
+  const handleTemperatureUpdate = (avgTemp: number) => {
+    setAverageTemperature(avgTemp)
+  }
+  
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const availableMonths = availableData[selectedYear] || []
+
   
   return (
     <div className="w-full h-screen flex bg-black overflow-hidden">
@@ -328,8 +373,39 @@ export default function TheProject() {
             camera.lookAt(0, 0, 0)
           }}
         >
-          <Scene showMouseCube={showMouseCube} onPlaceCube={handlePlaceCube} showModel={showModel} showHeatmap={showHeatmap} />
+          <Scene showMouseCube={showMouseCube} onPlaceCube={handlePlaceCube} showModel={showModel} showHeatmap={showHeatmap} selectedMonth={selectedMonth} selectedYear={selectedYear} onTemperatureUpdate={handleTemperatureUpdate} />
         </Canvas>
+        
+        {/* Date Selector - Bottom Center */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-4 bg-black/50 backdrop-blur-sm px-6 py-3 rounded-lg border border-white/20">
+          <div className="flex items-center gap-2">
+            <span className="text-white text-sm font-medium whitespace-nowrap">Year:</span>
+            <select
+              value={selectedYear}
+              onChange={(e) => handleYearChange(e.target.value)}
+              className="bg-gray-800 text-white px-3 py-1 rounded border border-white/20 focus:outline-none focus:border-white/40 cursor-pointer"
+            >
+              {Object.keys(availableData).map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <span className="text-white text-sm font-medium whitespace-nowrap">Month:</span>
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="bg-gray-800 text-white px-3 py-1 rounded border border-white/20 focus:outline-none focus:border-white/40 cursor-pointer"
+            >
+              {availableMonths.map(month => (
+                <option key={month} value={month}>
+                  {monthNames[parseInt(month) - 1]}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
       
       {/* Vertical Separator */}
@@ -351,9 +427,9 @@ export default function TheProject() {
             <div className="space-y-6">
               <StatCard 
                 title="Average Temperature"
-                value={cityStats.stats.averageTemp.value}
+                value={averageTemperature}
                 unit={cityStats.stats.averageTemp.unit}
-                description={cityStats.stats.averageTemp.description}
+                description={`${monthNames[parseInt(selectedMonth) - 1]} ${selectedYear} average temperature`}
                 icon="🌡️"
                 color="text-orange-400"
               />
