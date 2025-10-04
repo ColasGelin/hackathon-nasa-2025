@@ -2,28 +2,86 @@
 
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls, Text, Environment, useGLTF, Html } from '@react-three/drei'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import * as THREE from 'three'
 
-function HeatMapBoxes() {
+function HeatMapBoxes({ placedCylinders }: { placedCylinders: THREE.Vector3[] }) {
+    const [temperatureData, setTemperatureData] = useState<number[]>([])
     const spheres = []
     const gridSize = 59
 
-    const sphereRadius = Math.min(250 / gridSize, 220 / gridSize) * 0.1
+    const sphereRadius = Math.min(250 / gridSize, 220 / gridSize) * 0.2
+
+    // Load and parse CSV on mount
+    useEffect(() => {
+        fetch('/temper_data.csv')
+            .then(response => response.text())
+            .then(csvText => {
+                const lines = csvText.trim().split('\n')
+                const temps: number[] = []
+                
+                // Skip header row
+                for (let i = 1; i < lines.length; i++) {
+                    const parts = lines[i].split(',')
+                    if (parts.length >= 3) {
+                        temps.push(parseFloat(parts[2]))
+                    }
+                }
+                
+                setTemperatureData(temps)
+            })
+    }, [])
+
+    // Temperature range from CSV: min ~22, max ~44
+    const minTemp = 22
+    const maxTemp = 44
 
     let index = 0
 
     for (let x = 0; x < gridSize; x++) {
         for (let z = 0; z < gridSize; z++) {
-            const normalizedIndex = index / 3495 // Normalize to 0-1 for 25 boxes
-            const hue = (1 - normalizedIndex) * 240 // Blue (240) to Red (0)
+            let hue = 240 // Default blue
+            
+            if (temperatureData.length > index) {
+                let temp = temperatureData[index]
+                
+                // Calculate sphere position
+                const posX = ((gridSize - 1) / 2 - x) * (250 / gridSize)
+                const posZ = (z - (gridSize - 1) / 2) * (220 / gridSize)
+                const spherePos = new THREE.Vector3(posX, 3 + sphereRadius, posZ - 1)
+                
+                // Check how many cylinders affect this sphere and stack the cooling effect
+                let coolingEffect = 0
+                for (const cylinderPos of placedCylinders) {
+                    const distance = spherePos.distanceTo(cylinderPos)
+                    if (distance <= 10) {
+                        coolingEffect += 5 // Stack cooling effects
+                    }
+                }
+                
+                // Apply cooling effect but don't go below minimum temperature
+                temp = Math.max(temp - coolingEffect, minTemp)
+                
+                // Normalize temperature to 0-1 range
+                const normalizedTemp = (temp - minTemp) / (maxTemp - minTemp)
+                
+                if (normalizedTemp <= 0.3) {
+                    // Cool: blue (240) to green (120)
+                    hue = 240 - (normalizedTemp / 0.3) * 120 // 240 to 120
+                } else {
+                    // Warm: green (120) to red (0) - starts earlier at 30%
+                    const hotProgress = (normalizedTemp - 0.2) / 0.7 // 0 to 1
+                    hue = 120 - hotProgress * 120 // 120 to 0
+                }
+            }
+            
             const color = `hsl(${hue}, 100%, 50%)`
 
-            const posX = (x - (gridSize - 1) / 2) * (250 / gridSize)
+            const posX = ((gridSize - 1) / 2 - x) * (250 / gridSize)
             const posZ = (z - (gridSize - 1) / 2) * (220 / gridSize)
 
             spheres.push(
-                <mesh key={index} position={[posX, 3 + sphereRadius, posZ]}>
+                <mesh key={index} position={[posX, 3 + sphereRadius, posZ - 1]}>
                     <sphereGeometry args={[sphereRadius, 16, 16]} />
                     <meshBasicMaterial color={color} transparent opacity={1} />
                 </mesh>
@@ -36,12 +94,12 @@ function HeatMapBoxes() {
     return <>{spheres}</>
 }
 
-function MalagaModel() {
+function MalagaModel({ placedCylinders }: { placedCylinders: THREE.Vector3[] }) {
   const { scene } = useGLTF('/models/malaga/scene.glb')
   return (
     <>
-      <primitive object={scene} position={[0, -3, 0]} scale={1} />
-      <HeatMapBoxes />
+      <primitive object={scene} position={[0, -3, 0]} scale={1}/>
+      <HeatMapBoxes placedCylinders={placedCylinders} />
     </>
   )
 }
@@ -51,7 +109,7 @@ function PlacedCubes({ cubes }: { cubes: THREE.Vector3[] }) {
     <>
       {cubes.map((position, index) => (
         <mesh key={index} position={position}>
-          <cylinderGeometry args={[2.5, 2.5, 5, 32]} />
+          <cylinderGeometry args={[2.5, 2.5, 10, 32]} />
           <meshBasicMaterial color="green" transparent opacity={0.5} />
         </mesh>
       ))}
@@ -107,9 +165,7 @@ function Scene({ showMouseCube, onPlaceCube }: { showMouseCube: boolean, onPlace
   
   return (
     <>
-      <ambientLight intensity={0.5} />
-      <pointLight position={[10, 10, 10]} />
-      
+      <ambientLight intensity={1} />
       <Text
         position={[0, 2, 0]}
         fontSize={1}
@@ -130,7 +186,7 @@ function Scene({ showMouseCube, onPlaceCube }: { showMouseCube: boolean, onPlace
         Welcome to our 3D Project
       </Text>
       
-      <MalagaModel />
+      <MalagaModel placedCylinders={placedCubes} />
       
       <PlacedCubes cubes={placedCubes} />
       
@@ -141,14 +197,13 @@ function Scene({ showMouseCube, onPlaceCube }: { showMouseCube: boolean, onPlace
         enableZoom={true} 
         enableRotate={false}
         minDistance={5}  // Minimum zoom distance
-        maxDistance={80} // Maximum zoom distance
+        maxDistance={150} // Maximum zoom distance
         mouseButtons={{
           LEFT: 2, // Pan with left click (2 = PAN)
           MIDDLE: 1, // Zoom with middle click
           RIGHT: 0 // Rotate with right click (disabled since enableRotate is false)
         }}
       />
-      <Environment preset="sunset" />
     </>
   )
 }
