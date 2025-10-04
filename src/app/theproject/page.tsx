@@ -204,6 +204,7 @@ function Scene({ showMouseCube, onPlaceCube }: { showMouseCube: boolean, onPlace
           RIGHT: 0 // Rotate with right click (disabled since enableRotate is false)
         }}
       />
+       <Environment files="/venice_sunset_1k.hdr" />
     </>
   )
 }
