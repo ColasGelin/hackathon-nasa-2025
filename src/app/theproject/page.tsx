@@ -4,6 +4,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls, Text, Environment, useGLTF, Html } from '@react-three/drei'
 import { useState, useRef, useEffect } from 'react'
 import * as THREE from 'three'
+import { MinimalToggle, OrangeToggle } from '@/components/ui/toggle'
 
 function HeatMapBoxes({ placedCylinders }: { placedCylinders: THREE.Vector3[] }) {
     const [temperatureData, setTemperatureData] = useState<number[]>([])
@@ -94,12 +95,12 @@ function HeatMapBoxes({ placedCylinders }: { placedCylinders: THREE.Vector3[] })
     return <>{spheres}</>
 }
 
-function MalagaModel({ placedCylinders }: { placedCylinders: THREE.Vector3[] }) {
+function MalagaModel({ placedCylinders, showModel, showHeatmap }: { placedCylinders: THREE.Vector3[], showModel: boolean, showHeatmap: boolean }) {
   const { scene } = useGLTF('/models/malaga/scene.glb')
   return (
     <>
-      <primitive object={scene} position={[0, -3, 0]} scale={1}/>
-      <HeatMapBoxes placedCylinders={placedCylinders} />
+      {showModel && <primitive object={scene} position={[0, -3, 0]} scale={1}/>}
+      {showHeatmap && <HeatMapBoxes placedCylinders={placedCylinders} />}
     </>
   )
 }
@@ -155,7 +156,7 @@ function MouseFollowCube({ isActive, onPlace }: { isActive: boolean, onPlace: (p
   )
 }
 
-function Scene({ showMouseCube, onPlaceCube }: { showMouseCube: boolean, onPlaceCube: (position: THREE.Vector3) => void }) {
+function Scene({ showMouseCube, onPlaceCube, showModel, showHeatmap }: { showMouseCube: boolean, onPlaceCube: (position: THREE.Vector3) => void, showModel: boolean, showHeatmap: boolean }) {
   const [placedCubes, setPlacedCubes] = useState<THREE.Vector3[]>([])
   
   const handlePlaceCube = (position: THREE.Vector3) => {
@@ -186,7 +187,7 @@ function Scene({ showMouseCube, onPlaceCube }: { showMouseCube: boolean, onPlace
         Welcome to our 3D Project
       </Text>
       
-      <MalagaModel placedCylinders={placedCubes} />
+      <MalagaModel placedCylinders={placedCubes} showModel={showModel} showHeatmap={showHeatmap} />
       
       <PlacedCubes cubes={placedCubes} />
       
@@ -197,7 +198,7 @@ function Scene({ showMouseCube, onPlaceCube }: { showMouseCube: boolean, onPlace
         enableZoom={true} 
         enableRotate={false}
         minDistance={5}  // Minimum zoom distance
-        maxDistance={150} // Maximum zoom distance
+        maxDistance={205} // Maximum zoom distance
         mouseButtons={{
           LEFT: 2, // Pan with left click (2 = PAN)
           MIDDLE: 1, // Zoom with middle click
@@ -209,32 +210,177 @@ function Scene({ showMouseCube, onPlaceCube }: { showMouseCube: boolean, onPlace
   )
 }
 
+interface CityStats {
+  city: string
+  stats: {
+    averageTemp: {
+      value: number
+      unit: string
+      description: string
+    }
+    airQuality: {
+      value: number
+      unit: string
+      description: string
+    }
+    vegetationPercentage: {
+      value: number
+      unit: string
+      description: string
+    }
+    cityScore: {
+      value: number
+      unit: string
+      description: string
+    }
+  }
+}
+
+function StatCard({ title, value, unit, description, icon, color }: { title: string, value: number, unit: string, description: string, icon: string, color: string }) {
+  return (
+    <div className="group transition-all duration-300 hover:scale-105">
+      <div className="flex items-baseline justify-between mb-2">
+        <h3 className="text-lg font-semibold text-white drop-shadow-lg">{title}</h3>
+        <div className={`text-4xl font-bold transition-colors drop-shadow-lg ${color}`}>
+          {value}{unit}
+        </div>
+      </div>
+      <p className="text-xs text-gray-300 drop-shadow-lg text-left">{description}</p>
+    </div>
+  )
+}
+
+function VegetationBar({ value }: { value: number }) {
+  return (
+    <div className="group transition-all duration-300 hover:scale-105">
+      <div className="flex items-baseline justify-between mb-2">
+        <h3 className="text-lg font-semibold text-white drop-shadow-lg">Vegetation Coverage</h3>
+        <div className="text-4xl font-bold text-emerald-500 transition-colors drop-shadow-lg">
+          {value}%
+        </div>
+      </div>
+      <div className="relative w-full h-4 bg-black/40 backdrop-blur-sm rounded-full overflow-hidden border border-white/20 mb-2">
+        <div 
+          className="absolute top-0 left-0 h-full bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-full transition-all duration-1000 ease-out group-hover:from-emerald-500 group-hover:to-emerald-300"
+          style={{ width: `${value}%` }}
+        >
+          <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+        </div>
+      </div>
+      <p className="text-xs text-gray-300 drop-shadow-lg text-left">Percentage of urban area covered by vegetation</p>
+    </div>
+  )
+}
+
 export default function TheProject() {
   const [showMouseCube, setShowMouseCube] = useState(false)
+  const [cityStats, setCityStats] = useState<CityStats | null>(null)
+  const [showModel, setShowModel] = useState(true)
+  const [showHeatmap, setShowHeatmap] = useState(true)
+  
+  useEffect(() => {
+    fetch('/malagaStats.json')
+      .then(res => res.json())
+      .then(data => setCityStats(data))
+  }, [])
   
   const handlePlaceCube = (position: THREE.Vector3) => {
     setShowMouseCube(false)
   }
   
   return (
-    <div className="w-full h-screen relative">
-      {/* UI Button Overlay */}
-      <button
-        onClick={() => setShowMouseCube(!showMouseCube)}
-        className="absolute top-4 left-4 z-10 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-      >
-        {showMouseCube ? 'Hide' : 'Añadir Zona Verde'}
-      </button>
+    <div className="w-full h-screen flex bg-black overflow-hidden">
+      {/* Left - 3D Map (60%) */}
+      <div className="w-[60%] h-screen relative">
+        <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between">
+          <button
+            onClick={() => setShowMouseCube(!showMouseCube)}
+            className={`px-4 py-2 rounded-lg border transition-all whitespace-nowrap font-medium text-sm ${
+              showMouseCube 
+                ? 'bg-green-500/20 border-green-500/50 text-green-400 backdrop-blur-sm' 
+                : 'bg-black/50 border-white/20 text-white backdrop-blur-sm hover:border-white/40'
+            }`}
+          >
+            {showMouseCube ? 'Cancel' : 'Añadir Zona Verde'}
+          </button>
+          
+          <div className="flex items-center gap-3 bg-black/50 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20">
+            <span className="text-white text-sm font-medium whitespace-nowrap">3D Model</span>
+            <MinimalToggle 
+              checked={showModel}
+              onChange={(e) => setShowModel(e.target.checked)}
+            />
+          </div>
+          
+          <div className="flex items-center gap-3 bg-black/50 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20">
+            <span className="text-white text-sm font-medium whitespace-nowrap">Heatmap</span>
+            <MinimalToggle 
+              checked={showHeatmap}
+              onChange={(e) => setShowHeatmap(e.target.checked)}
+            />
+          </div>
+        </div>
+        
+        <Canvas 
+          camera={{ position: [0, 205, 0], fov: 75, near: 0.1, far: 10000 }}
+          style={{ background: '#000000' }}
+          onCreated={({ camera }) => {
+            camera.lookAt(0, 0, 0)
+          }}
+        >
+          <Scene showMouseCube={showMouseCube} onPlaceCube={handlePlaceCube} showModel={showModel} showHeatmap={showHeatmap} />
+        </Canvas>
+      </div>
       
-      <Canvas 
-        camera={{ position: [0, 150, 0], fov: 75, near: 0.1, far: 10000 }}
-        style={{ background: '#000000' }}
-        onCreated={({ camera }) => {
-          camera.lookAt(0, 0, 0)
-        }}
-      >
-        <Scene showMouseCube={showMouseCube} onPlaceCube={handlePlaceCube} />
-      </Canvas>
+      {/* Vertical Separator */}
+      <div className="w-[10px] h-screen bg-gradient-to-b from-transparent via-white/30 to-transparent"></div>
+      
+      {/* Right - City Stats (40%) */}
+      <div className="w-[40%] h-screen flex items-center justify-center p-6 pointer-events-none">
+        <div className="w-full max-w-lg pointer-events-auto">
+          {/* Header */}
+          <div className="mb-8 text-center">
+            <h1 className="text-4xl font-bold text-white mb-2 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent drop-shadow-2xl">
+              {cityStats?.city || 'Loading...'}
+            </h1>
+            <p className="text-gray-300 text-sm drop-shadow-lg">Environmental Health Dashboard</p>
+          </div>
+          
+          {/* Stats Grid */}
+          {cityStats && (
+            <div className="space-y-6">
+              <StatCard 
+                title="Average Temperature"
+                value={cityStats.stats.averageTemp.value}
+                unit={cityStats.stats.averageTemp.unit}
+                description={cityStats.stats.averageTemp.description}
+                icon="🌡️"
+                color="text-orange-400"
+              />
+              
+              <StatCard 
+                title="Air Quality Index"
+                value={cityStats.stats.airQuality.value}
+                unit={cityStats.stats.airQuality.unit}
+                description={cityStats.stats.airQuality.description}
+                icon="💨"
+                color="text-rose-400"
+              />
+              
+              <VegetationBar value={cityStats.stats.vegetationPercentage.value} />
+              
+              <StatCard 
+                title="City Health Score"
+                value={cityStats.stats.cityScore.value}
+                unit={cityStats.stats.cityScore.unit}
+                description={cityStats.stats.cityScore.description}
+                icon="⭐"
+                color="text-emerald-400"
+              />
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

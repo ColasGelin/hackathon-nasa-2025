@@ -1,0 +1,25 @@
+{
+  "city": "Malaga",
+  "stats": {
+    "averageTemp": {
+      "value": 18.5,
+      "unit": "°C",
+      "description": "Annual average temperature"
+    },
+    "airQuality": {
+      "value": 65,
+      "unit": "AQI",
+      "description": "Air Quality Index (0-100, lower is better)"
+    },
+    "vegetationPercentage": {
+      "value": 12.3,
+      "unit": "%",
+      "description": "Percentage of urban area covered by vegetation"
+    },
+    "cityScore": {
+      "value": 7.8,
+      "unit": "/10",
+      "description": "Overall environmental health score"
+    }
+  }
+}
