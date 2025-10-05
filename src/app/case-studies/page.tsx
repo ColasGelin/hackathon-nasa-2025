@@ -4,11 +4,18 @@ import InteractiveH2 from '@/components/InteractiveH2'
 
 export default function CaseStudies() {
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-red-900 via-slate-900 via-orange-800 via-slate-800 to-green-900 text-white">
       <Navbar />
       
       {/* Hero Section */}
       <section className="min-h-screen flex items-center justify-center relative overflow-hidden">
+        {/* Heat map overlay */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-0 left-0 w-40 h-40 bg-red-500/30 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute top-20 right-10 w-32 h-32 bg-orange-500/30 rounded-full blur-2xl animate-pulse delay-1000"></div>
+          <div className="absolute bottom-20 left-20 w-48 h-48 bg-green-500/30 rounded-full blur-3xl animate-pulse delay-2000"></div>
+          <div className="absolute bottom-10 right-20 w-36 h-36 bg-blue-500/30 rounded-full blur-2xl animate-pulse delay-500"></div>
+        </div>
         <div className="text-center text-white px-4 max-w-4xl relative z-10">
           <h1 className="text-5xl md:text-7xl font-bold mb-6">
             Case Studies
@@ -71,28 +78,30 @@ export default function CaseStudies() {
             </div>
             
             {/* Impact Statistics Grid */}
-            <div className="grid md:grid-cols-2 gap-6 mt-8">
-              <div className="p-6 bg-green-900/30 rounded-lg border border-green-700/50 hover:border-green-500/50 hover:bg-green-900/40 transition-all duration-300">
+            <div className="grid mb-12 mt-8 md:grid-cols-2 gap-6 relative">
+              <div className="p-6 bg-green-900/30 rounded-lg border border-green-700/50 hover:border-green-500/50 hover:bg-green-900/40 transition-all duration-300 min-h-[120px] flex flex-col">
                 <h4 className="font-semibold mb-3 text-green-300">Temperature Reduction</h4>
-                <p className="text-slate-300">Air temperature dropped by up to <strong className="text-white">4°C</strong> in the most vegetated areas and around <strong className="text-white">2°C</strong> citywide.</p>
+                <p className="text-slate-300 flex-1">Air temperature dropped by up to <strong className="text-white">4°C</strong> in the most vegetated areas and around <strong className="text-white">2°C</strong> citywide.</p>
               </div>
               
-              <div className="p-6 bg-blue-900/30 rounded-lg border border-blue-700/50 hover:border-blue-500/50 hover:bg-blue-900/40 transition-all duration-300">
+              <div className="p-6 bg-blue-900/30 rounded-lg border border-blue-700/50 hover:border-blue-500/50 hover:bg-blue-900/40 transition-all duration-300 min-h-[120px] flex flex-col">
                 <h4 className="font-semibold mb-3 text-blue-300">Surface Temperature</h4>
-                <p className="text-slate-300">Surface temperature (from satellite data) fell from around <strong className="text-white">40°C to 30°C</strong> in targeted zones between 2016 and 2019.</p>
+                <p className="text-slate-300 flex-1">Surface temperature (from satellite data) fell from around <strong className="text-white">40°C to 30°C</strong> in targeted zones between 2016 and 2019.</p>
               </div>
               
-              <div>
-                <div className="p-6 bg-purple-900/30 rounded-lg border border-purple-700/50 hover:border-purple-500/50 hover:bg-purple-900/40 transition-all duration-300">
-                  <h4 className="font-semibold mb-3 text-purple-300">Air Quality Improvement</h4>
-                  <p className="text-slate-300">PM₂.₅ decreased from <strong className="text-white">21.8 to 20.2 µg/m³</strong>, PM₁₀ from <strong className="text-white">46.0 to 40.4 µg/m³</strong>, and ozone from <strong className="text-white">30.1 to 26.3 µg/m³</strong>.</p>
-                </div>
-                <p className="text-xs text-slate-500 mt-1">PM₂.₅/PM₁₀: particulate matter ≤ 2.5/10 micrometers • µg/m³: micrograms per cubic meter</p>
+              <div className="p-6 bg-purple-900/30 rounded-lg border border-purple-700/50 hover:border-purple-500/50 hover:bg-purple-900/40 transition-all duration-300 min-h-[120px] flex flex-col">
+                <h4 className="font-semibold mb-3 text-purple-300">Air Quality Improvement</h4>
+                <p className="text-slate-300 flex-1">PM₂.₅ decreased from <strong className="text-white">21.8 to 20.2 µg/m³</strong>, PM₁₀ from <strong className="text-white">46.0 to 40.4 µg/m³</strong>, and ozone from <strong className="text-white">30.1 to 26.3 µg/m³</strong>.</p>
               </div>
               
-              <div className="p-6 bg-red-900/30 rounded-lg border border-red-700/50 hover:border-red-500/50 hover:bg-red-900/40 transition-all duration-300">
+              <div className="p-6 bg-red-900/30 rounded-lg border border-red-700/50 hover:border-red-500/50 hover:bg-red-900/40 transition-all duration-300 min-h-[120px] flex flex-col">
                 <h4 className="font-semibold mb-3 text-red-300">Health Benefits</h4>
-                <p className="text-slate-300">Respiratory infection rates fell from <strong className="text-white">159 to 95</strong> per thousand inhabitants.</p>
+                <p className="text-slate-300 flex-1">Respiratory infection rates fell from <strong className="text-white">159 to 95</strong> per thousand inhabitants.</p>
+              </div>
+              
+              {/* Legend positioned at bottom left */}
+              <div className="absolute -bottom-8 left-0">
+                <p className="text-xs text-slate-500">PM₂.₅/PM₁₀: particulate matter ≤ 2.5/10 micrometers • µg/m³: micrograms per cubic meter</p>
               </div>
             </div>
             
