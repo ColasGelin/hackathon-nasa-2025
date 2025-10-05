@@ -6,12 +6,38 @@ import { useState, useRef, useEffect } from 'react'
 import * as THREE from 'three'
 import { MinimalToggle, OrangeToggle } from '@/components/ui/toggle'
 
-function HeatMapBoxes({ placedCylinders, selectedMonth, selectedYear, onTemperatureUpdate }: { placedCylinders: THREE.Vector3[], selectedMonth: string, selectedYear: string, onTemperatureUpdate?: (avgTemp: number) => void }) {
+function HeatMapBoxes({ placedCylinders, selectedMonth, selectedYear, onTemperatureUpdate, isVisible }: { placedCylinders: THREE.Vector3[], selectedMonth: string, selectedYear: string, onTemperatureUpdate?: (avgTemp: number) => void, isVisible: boolean }) {
     const [temperatureData, setTemperatureData] = useState<number[]>([])
-    const spheres = []
+    const groupRef = useRef<THREE.Group>(null)
+    const targetOpacity = useRef(isVisible ? 0.3 : 0)
+    const currentOpacity = useRef(isVisible ? 0.3 : 0)
     const gridSize = 59
 
     const sphereRadius = Math.min(250 / gridSize, 220 / gridSize) * 0.2
+
+    // Update target opacity when visibility changes
+    useEffect(() => {
+        targetOpacity.current = isVisible ? 0.3 : 0
+    }, [isVisible])
+
+    // Animate opacity smoothly
+    useFrame(() => {
+        const delta = 0.05
+        const diff = targetOpacity.current - currentOpacity.current
+        
+        if (Math.abs(diff) > 0.001 && groupRef.current) {
+            currentOpacity.current += diff * delta
+            
+            // Update all mesh materials in the group
+            groupRef.current.children.forEach((child) => {
+                if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshBasicMaterial) {
+                    child.material.opacity = currentOpacity.current
+                    child.material.depthWrite = currentOpacity.current > 0.01
+                    child.material.needsUpdate = true
+                }
+            })
+        }
+    })
 
     // Load and parse CSV when month or year changes
     useEffect(() => {
@@ -47,6 +73,7 @@ function HeatMapBoxes({ placedCylinders, selectedMonth, selectedYear, onTemperat
     const minTemp = 22
     const maxTemp = 44
 
+    const spheres = []
     let index = 0
 
     for (let x = 0; x < gridSize; x++) {
@@ -87,14 +114,18 @@ function HeatMapBoxes({ placedCylinders, selectedMonth, selectedYear, onTemperat
             }
             
             const color = `hsl(${hue}, 100%, 50%)`
-
             const posX = ((gridSize - 1) / 2 - x) * (250 / gridSize)
             const posZ = (z - (gridSize - 1) / 2) * (220 / gridSize)
 
             spheres.push(
                 <mesh key={index} position={[posX, 3 + sphereRadius, posZ - 1]}>
-                    <sphereGeometry args={[sphereRadius, 16, 16]} />
-                    <meshBasicMaterial color={color} transparent opacity={1} />
+                    <boxGeometry args={[sphereRadius * 5.7, sphereRadius / 10, sphereRadius * 5]} />
+                    <meshBasicMaterial 
+                        color={color} 
+                        transparent 
+                        opacity={currentOpacity.current}
+                        depthWrite={currentOpacity.current > 0.01}
+                    />
                 </mesh>
             )
 
@@ -102,7 +133,7 @@ function HeatMapBoxes({ placedCylinders, selectedMonth, selectedYear, onTemperat
         }
     }
 
-    return <>{spheres}</>
+    return <group ref={groupRef}>{spheres}</group>
 }
 
 function MalagaModel({ placedCylinders, showModel, showHeatmap, selectedMonth, selectedYear, onTemperatureUpdate }: { placedCylinders: THREE.Vector3[], showModel: boolean, showHeatmap: boolean, selectedMonth: string, selectedYear: string, onTemperatureUpdate?: (avgTemp: number) => void }) {
@@ -110,7 +141,13 @@ function MalagaModel({ placedCylinders, showModel, showHeatmap, selectedMonth, s
   return (
     <>
       {showModel && <primitive object={scene} position={[0, -3, 0]} scale={1}/>}
-      {showHeatmap && <HeatMapBoxes placedCylinders={placedCylinders} selectedMonth={selectedMonth} selectedYear={selectedYear} onTemperatureUpdate={onTemperatureUpdate} />}
+      <HeatMapBoxes 
+        placedCylinders={placedCylinders} 
+        selectedMonth={selectedMonth} 
+        selectedYear={selectedYear} 
+        onTemperatureUpdate={onTemperatureUpdate}
+        isVisible={showHeatmap}
+      />
     </>
   )
 }
