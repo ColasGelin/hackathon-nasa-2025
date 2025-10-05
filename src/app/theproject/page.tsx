@@ -7,13 +7,16 @@ import * as THREE from 'three'
 import { MinimalToggle, OrangeToggle } from '@/components/ui/toggle'
 
 function HeatMapBoxes({ placedCylinders, selectedMonth, selectedYear, onTemperatureUpdate, isVisible }: { placedCylinders: THREE.Vector3[], selectedMonth: string, selectedYear: string, onTemperatureUpdate?: (avgTemp: number) => void, isVisible: boolean }) {
-    const [temperatureData, setTemperatureData] = useState<number[]>([])
+    const [temperatureData, setTemperatureData] = useState<Map<string, number>>(new Map())
     const groupRef = useRef<THREE.Group>(null)
     const targetOpacity = useRef(isVisible ? 0.3 : 0)
     const currentOpacity = useRef(isVisible ? 0.3 : 0)
-    const gridSize = 59
+    
+    // Grid dimensions based on CSV coordinates
+    const gridHeight = 68  // 0-67 rows (lat)
+    const gridWidth = 94   // 0-93 columns (lon)
 
-    const sphereRadius = Math.min(250 / gridSize, 220 / gridSize) * 0.2
+    const sphereRadius = Math.min(250 / gridWidth, 220 / gridHeight) * 0.2
 
     // Update target opacity when visibility changes
     useEffect(() => {
@@ -46,21 +49,27 @@ function HeatMapBoxes({ placedCylinders, selectedMonth, selectedYear, onTemperat
             .then(response => response.text())
             .then(csvText => {
                 const lines = csvText.trim().split('\n')
-                const temps: number[] = []
+                const tempMap = new Map<string, number>()
                 
                 // Skip header row
                 for (let i = 1; i < lines.length; i++) {
                     const parts = lines[i].split(',')
                     if (parts.length >= 3) {
-                        temps.push(parseFloat(parts[2]))
+                        const lat = parseInt(parts[0])  // row index
+                        const lon = parseInt(parts[1])  // column index
+                        const temp = parseFloat(parts[2])
+                        // Use lat,lon as key (matching HTML visualizer)
+                        tempMap.set(`${lat},${lon}`, temp)
                     }
                 }
                 
-                setTemperatureData(temps)
+                setTemperatureData(tempMap)
                 
                 // Calculate and update average temperature
-                if (temps.length > 0 && onTemperatureUpdate) {
-                    const avgTemp = temps.reduce((sum, temp) => sum + temp, 0) / temps.length
+                if (tempMap.size > 0 && onTemperatureUpdate) {
+                    let sum = 0
+                    tempMap.forEach(temp => sum += temp)
+                    const avgTemp = sum / tempMap.size
                     onTemperatureUpdate(Math.round(avgTemp * 10) / 10) // Round to 1 decimal
                 }
             })
@@ -74,64 +83,63 @@ function HeatMapBoxes({ placedCylinders, selectedMonth, selectedYear, onTemperat
     const maxTemp = 44
 
     const spheres = []
-    let index = 0
 
-    for (let x = 0; x < gridSize; x++) {
-        for (let z = 0; z < gridSize; z++) {
+    // Iterate through grid: lat (rows) from 0 to 67, lon (columns) from 0 to 93
+    // This matches the HTML visualizer approach: for each row, for each column
+    for (let lat = 0; lat < gridHeight; lat++) {
+        for (let lon = 0; lon < gridWidth; lon++) {
             let hue = 240 // Default blue
             
-            if (temperatureData.length > index) {
-                let temp = temperatureData[index]
+            const key = `${lat},${lon}`
+            const temp = temperatureData.get(key)
+            
+            if (temp !== undefined) {
+                let adjustedTemp = temp
                 
-                // Calculate sphere position (before transformation)
-                const posX = ((gridSize - 1) / 2 - x) * (250 / gridSize)
-                const posZ = (z - (gridSize - 1) / 2) * (220 / gridSize)
-                const spherePos = new THREE.Vector3(posX, 3 + sphereRadius, posZ - 1)
+                // Map grid coordinates to 3D space
+                // lon (0-93) maps to X axis
+                // lat (0-67) maps to Z axis
+                const posX = (lon - gridWidth / 2) * (250 / gridWidth)
+                const posZ = (lat - gridHeight / 2) * (220 / gridHeight)
+                const spherePos = new THREE.Vector3(posX, 3 + sphereRadius, posZ)
                 
-                // Apply the same transformation as the group to get world position
-                // 1. Scale by [-1, 1, 1] (flip x)
-                const transformedPos = new THREE.Vector3(-spherePos.x, spherePos.y, spherePos.z)
-                // 2. Rotate by Math.PI/2 around Y axis
-                const cos = Math.cos(Math.PI / 2)
-                const sin = Math.sin(Math.PI / 2)
-                const rotatedX = transformedPos.x * cos + transformedPos.z * sin
-                const rotatedZ = -transformedPos.x * sin + transformedPos.z * cos
-                transformedPos.x = rotatedX
-                transformedPos.z = rotatedZ
-                // 3. Add position offset [30, 0, 0]
-                transformedPos.x += 30
-                
-                // Check how many cylinders affect this sphere and stack the cooling effect
+                // Check cylinder cooling effects
                 let coolingEffect = 0
                 for (const cylinderPos of placedCylinders) {
-                    const distance = transformedPos.distanceTo(cylinderPos)
+                    const distance = spherePos.distanceTo(cylinderPos)
                     if (distance <= 10) {
-                        coolingEffect += 5 // Stack cooling effects
+                        coolingEffect += 5
                     }
                 }
                 
                 // Apply cooling effect but don't go below minimum temperature
-                temp = Math.max(temp - coolingEffect, minTemp)
+                adjustedTemp = Math.max(adjustedTemp - coolingEffect, minTemp)
                 
                 // Normalize temperature to 0-1 range
-                const normalizedTemp = (temp - minTemp) / (maxTemp - minTemp)
+                const normalized = (adjustedTemp - minTemp) / (maxTemp - minTemp)
                 
-                if (normalizedTemp <= 0.3) {
-                    // Cool: blue (240) to green (120)
-                    hue = 240 - (normalizedTemp / 0.3) * 120 // 240 to 120
+                // Color gradient matching HTML visualizer: blue -> cyan -> green -> yellow -> red
+                if (normalized < 0.25) {
+                    // Blue to Cyan
+                    hue = 240 - (normalized / 0.25) * 60  // 240 to 180
+                } else if (normalized < 0.5) {
+                    // Cyan to Green
+                    hue = 180 - ((normalized - 0.25) / 0.25) * 60  // 180 to 120
+                } else if (normalized < 0.75) {
+                    // Green to Yellow
+                    hue = 120 - ((normalized - 0.5) / 0.25) * 60  // 120 to 60
                 } else {
-                    // Warm: green (120) to red (0) - starts earlier at 30%
-                    const hotProgress = (normalizedTemp - 0.2) / 0.7 // 0 to 1
-                    hue = 120 - hotProgress * 120 // 120 to 0
+                    // Yellow to Red
+                    hue = 60 - ((normalized - 0.75) / 0.25) * 60  // 60 to 0
                 }
             }
             
             const color = `hsl(${hue}, 100%, 50%)`
-            const posX = ((gridSize - 1) / 2 - x) * (250 / gridSize)
-            const posZ = (z - (gridSize - 1) / 2) * (220 / gridSize)
+            const posX = (lon - gridWidth / 2) * (250 / gridWidth)
+            const posZ = (lat - gridHeight / 2) * (220 / gridHeight)
 
             spheres.push(
-                <mesh key={index} position={[posX, 3 + sphereRadius, posZ - 1]}>
+                <mesh key={`${lat}-${lon}`} position={[posX, 3 + sphereRadius, posZ]}>
                     <boxGeometry args={[sphereRadius * 5.7, sphereRadius / 10, sphereRadius * 5]} />
                     <meshBasicMaterial 
                         color={color} 
@@ -141,17 +149,12 @@ function HeatMapBoxes({ placedCylinders, selectedMonth, selectedYear, onTemperat
                     />
                 </mesh>
             )
-
-            index++
         }
     }
 
     return (
         <group 
-            ref={groupRef} 
-            scale={[-1, 1, 1]} 
-            rotation={[0, Math.PI / 2, 0]}
-            position={[30, 0, 0]}
+            ref={groupRef}
         >
             {spheres}
         </group>
@@ -225,13 +228,20 @@ function MouseFollowCube({ isActive, onPlace }: { isActive: boolean, onPlace: (p
   )
 }
 
-function Scene({ showMouseCube, onPlaceCube, showModel, showHeatmap, selectedMonth, selectedYear, onTemperatureUpdate }: { showMouseCube: boolean, onPlaceCube: (position: THREE.Vector3) => void, showModel: boolean, showHeatmap: boolean, selectedMonth: string, selectedYear: string, onTemperatureUpdate?: (avgTemp: number) => void }) {
+function Scene({ showMouseCube, onPlaceCube, showModel, showHeatmap, selectedMonth, selectedYear, onTemperatureUpdate, resetTrigger }: { showMouseCube: boolean, onPlaceCube: (position: THREE.Vector3) => void, showModel: boolean, showHeatmap: boolean, selectedMonth: string, selectedYear: string, onTemperatureUpdate?: (avgTemp: number) => void, resetTrigger?: number }) {
   const [placedCubes, setPlacedCubes] = useState<THREE.Vector3[]>([])
   
   const handlePlaceCube = (position: THREE.Vector3) => {
     setPlacedCubes(prev => [...prev, position])
     onPlaceCube(position)
   }
+  
+  // Reset placed cubes when resetTrigger changes
+  useEffect(() => {
+    if (resetTrigger !== undefined && resetTrigger > 0) {
+      setPlacedCubes([])
+    }
+  }, [resetTrigger])
   
   return (
     <>
@@ -266,12 +276,12 @@ function Scene({ showMouseCube, onPlaceCube, showModel, showHeatmap, selectedMon
         enablePan={!showMouseCube} 
         enableZoom={true} 
         enableRotate={false}
-        minDistance={5}  // Minimum zoom distance
-        maxDistance={205} // Maximum zoom distance
+        minDistance={5}
+        maxDistance={205}
         mouseButtons={{
-          LEFT: 2, // Pan with left click (2 = PAN)
-          MIDDLE: 1, // Zoom with middle click
-          RIGHT: 0 // Rotate with right click (disabled since enableRotate is false)
+          LEFT: 2,
+          MIDDLE: 1,
+          RIGHT: 0
         }}
       />
        <Environment files="/venice_sunset_1k.hdr" />
@@ -346,7 +356,10 @@ export default function TheProject() {
   const [cityStats, setCityStats] = useState<CityStats | null>(null)
   const [showModel, setShowModel] = useState(true)
   const [showHeatmap, setShowHeatmap] = useState(true)
-  const [averageTemperature, setAverageTemperature] = useState<number>(18.5) // Default value
+  const [averageTemperature, setAverageTemperature] = useState<number>(18.5)
+  const [showDataWarning, setShowDataWarning] = useState(false)
+  const [placedZonesCount, setPlacedZonesCount] = useState(0)
+  const [resetTrigger, setResetTrigger] = useState(0)
   
   // Available data mapping: year -> array of available months
   const availableData: Record<string, string[]> = {
@@ -375,6 +388,13 @@ export default function TheProject() {
   
   const handlePlaceCube = (position: THREE.Vector3) => {
     setShowMouseCube(false)
+    setPlacedZonesCount(prev => prev + 1)
+  }
+  
+  const handleRemoveAll = () => {
+    setPlacedZonesCount(0)
+    setResetTrigger(prev => prev + 1) // Trigger reset without remounting Canvas
+    setShowMouseCube(false)
   }
   
   const handleYearChange = (year: string) => {
@@ -400,6 +420,7 @@ export default function TheProject() {
 
   const handleYearSliderChange = (index: number) => {
     const year = availableYears[index]
+    const previousMonth = selectedMonth
     setSelectedYear(year)
     
     // Try to keep the current month if it exists in the new year
@@ -407,9 +428,29 @@ export default function TheProject() {
     if (newYearMonths.includes(selectedMonth)) {
       // Current month exists in new year, keep it
       setSelectedMonth(selectedMonth)
+      setShowDataWarning(false)
     } else {
-      // Current month doesn't exist in new year, set to first available month
-      setSelectedMonth(newYearMonths[0])
+      // Current month doesn't exist in new year, show warning
+      setShowDataWarning(true)
+      
+      // Find the closest previous month that exists
+      const currentMonthNum = parseInt(selectedMonth)
+      let closestMonth = newYearMonths[0] // Default to first month
+      
+      for (let i = currentMonthNum - 1; i >= 1; i--) {
+        const monthStr = i.toString().padStart(2, '0')
+        if (newYearMonths.includes(monthStr)) {
+          closestMonth = monthStr
+          break
+        }
+      }
+      
+      setSelectedMonth(closestMonth)
+      
+      // Hide warning after 3 seconds
+      setTimeout(() => {
+        setShowDataWarning(false)
+      }, 3000)
     }
   }
 
@@ -420,6 +461,13 @@ export default function TheProject() {
     <div className="w-full h-screen flex bg-black overflow-hidden">
       {/* Left - 3D Map (60%) */}
       <div className="w-[60%] h-screen relative">
+        {/* Data Unavailable Warning */}
+        {showDataWarning && (
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 bg-orange-900/90 backdrop-blur-sm px-6 py-3 rounded-lg border border-orange-500/50 shadow-lg animate-fade-in">
+            <p className="text-white text-sm font-semibold">⚠️ No data available for the selected month in {selectedYear}</p>
+          </div>
+        )}
+
         {/* Date Selector - Top Left */}
         <div className="absolute top-4 left-4 z-10 bg-black/90 backdrop-blur-sm px-6 py-4 rounded-lg border border-white/20 shadow-lg">
           
@@ -494,11 +542,20 @@ export default function TheProject() {
             camera.lookAt(0, 0, 0)
           }}
         >
-          <Scene showMouseCube={showMouseCube} onPlaceCube={handlePlaceCube} showModel={showModel} showHeatmap={showHeatmap} selectedMonth={selectedMonth} selectedYear={selectedYear} onTemperatureUpdate={handleTemperatureUpdate} />
+          <Scene 
+            showMouseCube={showMouseCube} 
+            onPlaceCube={handlePlaceCube} 
+            showModel={showModel} 
+            showHeatmap={showHeatmap} 
+            selectedMonth={selectedMonth} 
+            selectedYear={selectedYear} 
+            onTemperatureUpdate={handleTemperatureUpdate}
+            resetTrigger={resetTrigger}
+          />
         </Canvas>
         
-        {/* Add Green Zone Button - Bottom Center */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10">
+        {/* Add Green Zone and Remove All Buttons - Bottom Center */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3">
           <button
             onClick={() => setShowMouseCube(!showMouseCube)}
             className={`px-8 py-3 rounded-lg border-2 transition-all whitespace-nowrap font-semibold text-base shadow-lg ${
@@ -509,6 +566,15 @@ export default function TheProject() {
           >
             {showMouseCube ? '✕ Cancel' : '+ Add Green Zone'}
           </button>
+          
+          {placedZonesCount > 0 && (
+            <button
+              onClick={handleRemoveAll}
+              className="px-6 py-3 rounded-lg border-2 border-red-600 bg-red-500 text-white font-semibold text-base shadow-lg hover:bg-red-600 transition-all"
+            >
+              Remove All
+            </button>
+          )}
         </div>
       </div>
       
