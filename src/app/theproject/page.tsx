@@ -78,9 +78,19 @@ function HeatMapBoxes({ placedCylinders, selectedMonth, selectedYear, onTemperat
             })
     }, [selectedMonth, selectedYear, onTemperatureUpdate])
 
-    // Temperature range from CSV: min ~22, max ~44
-    const minTemp = 22
-    const maxTemp = 44
+    // Calculate actual temperature range from the data
+    let minTemp = Infinity
+    let maxTemp = -Infinity
+    temperatureData.forEach(temp => {
+        if (temp < minTemp) minTemp = temp
+        if (temp > maxTemp) maxTemp = temp
+    })
+    
+    // Fallback to default range if no data
+    if (!isFinite(minTemp) || !isFinite(maxTemp)) {
+        minTemp = 24
+        maxTemp = 56
+    }
 
     const spheres = []
 
