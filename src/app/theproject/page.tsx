@@ -22,7 +22,7 @@ function HeatMapBoxes({ placedCylinders, selectedMonth, selectedYear, onTemperat
 
     // Animate opacity smoothly
     useFrame(() => {
-        const delta = 0.05
+        const delta = 0.2
         const diff = targetOpacity.current - currentOpacity.current
         
         if (Math.abs(diff) > 0.001 && groupRef.current) {
@@ -83,15 +83,28 @@ function HeatMapBoxes({ placedCylinders, selectedMonth, selectedYear, onTemperat
             if (temperatureData.length > index) {
                 let temp = temperatureData[index]
                 
-                // Calculate sphere position
+                // Calculate sphere position (before transformation)
                 const posX = ((gridSize - 1) / 2 - x) * (250 / gridSize)
                 const posZ = (z - (gridSize - 1) / 2) * (220 / gridSize)
                 const spherePos = new THREE.Vector3(posX, 3 + sphereRadius, posZ - 1)
                 
+                // Apply the same transformation as the group to get world position
+                // 1. Scale by [-1, 1, 1] (flip x)
+                const transformedPos = new THREE.Vector3(-spherePos.x, spherePos.y, spherePos.z)
+                // 2. Rotate by Math.PI/2 around Y axis
+                const cos = Math.cos(Math.PI / 2)
+                const sin = Math.sin(Math.PI / 2)
+                const rotatedX = transformedPos.x * cos + transformedPos.z * sin
+                const rotatedZ = -transformedPos.x * sin + transformedPos.z * cos
+                transformedPos.x = rotatedX
+                transformedPos.z = rotatedZ
+                // 3. Add position offset [30, 0, 0]
+                transformedPos.x += 30
+                
                 // Check how many cylinders affect this sphere and stack the cooling effect
                 let coolingEffect = 0
                 for (const cylinderPos of placedCylinders) {
-                    const distance = spherePos.distanceTo(cylinderPos)
+                    const distance = transformedPos.distanceTo(cylinderPos)
                     if (distance <= 10) {
                         coolingEffect += 5 // Stack cooling effects
                     }
@@ -133,7 +146,16 @@ function HeatMapBoxes({ placedCylinders, selectedMonth, selectedYear, onTemperat
         }
     }
 
-    return <group ref={groupRef}>{spheres}</group>
+    return (
+        <group 
+            ref={groupRef} 
+            scale={[-1, 1, 1]} 
+            rotation={[0, Math.PI / 2, 0]}
+            position={[30, 0, 0]}
+        >
+            {spheres}
+        </group>
+    )
 }
 
 function MalagaModel({ placedCylinders, showModel, showHeatmap, selectedMonth, selectedYear, onTemperatureUpdate }: { placedCylinders: THREE.Vector3[], showModel: boolean, showHeatmap: boolean, selectedMonth: string, selectedYear: string, onTemperatureUpdate?: (avgTemp: number) => void }) {
@@ -285,7 +307,7 @@ interface CityStats {
 
 function StatCard({ title, value, unit, description, icon, color }: { title: string, value: number, unit: string, description: string, icon: string, color: string }) {
   return (
-    <div className="group transition-all duration-300 hover:scale-105">
+    <div className="group transition-all duration-300 hover:scale-105 bg-black/80 backdrop-blur-sm p-4 rounded-lg border border-white/20 shadow-lg">
       <div className="flex items-baseline justify-between mb-2">
         <h3 className="text-lg font-semibold text-white drop-shadow-lg">{title}</h3>
         <div className={`text-4xl font-bold transition-colors drop-shadow-lg ${color}`}>
@@ -299,7 +321,7 @@ function StatCard({ title, value, unit, description, icon, color }: { title: str
 
 function VegetationBar({ value }: { value: number }) {
   return (
-    <div className="group transition-all duration-300 hover:scale-105">
+    <div className="group transition-all duration-300 hover:scale-105 bg-black/80 backdrop-blur-sm p-4 rounded-lg border border-white/20 shadow-lg">
       <div className="flex items-baseline justify-between mb-2">
         <h3 className="text-lg font-semibold text-white drop-shadow-lg">Vegetation Coverage</h3>
         <div className="text-4xl font-bold text-emerald-500 transition-colors drop-shadow-lg">
@@ -328,17 +350,17 @@ export default function TheProject() {
   
   // Available data mapping: year -> array of available months
   const availableData: Record<string, string[]> = {
-    '2014': ['01', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'],
-    '2015': ['01', '02', '03', '05', '06', '07', '08', '09', '10', '11', '12'],
-    '2016': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'],
-    '2017': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'],
-    '2018': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'],
-    '2019': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'],
-    '2020': ['01', '02', '04', '05', '06', '07', '08', '09', '11', '12'],
-    '2021': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'],
-    '2022': ['01', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'],
+    '2014': ['01', '03', '04', '05', '07', '08', '09', '10', '11', '12'], // Removed 06 (Jun)
+    '2015': ['01', '02', '03', '05', '06', '09', '11', '12'], // Removed 07 (Jul), 08 (Aug), 10 (Oct)
+    '2016': ['01', '02', '05', '06', '07', '09', '10', '11', '12'], // Removed 03 (Mar), 04 (Apr), 08 (Aug)
+    '2017': ['01', '02', '03', '04', '06', '08', '09', '10', '11', '12'], // Removed 05 (May), 07 (Jul)
+    '2018': ['01', '02', '04', '05', '06', '07', '09', '11', '12'], // Removed 03 (Mar), 08 (Aug), 10 (Oct)
+    '2019': ['01', '02', '03', '04', '05', '06', '07', '08', '11', '12'], // Removed 09 (Sept), 10 (Oct)
+    '2020': ['01', '04', '06', '07', '08', '11', '12'], // Removed 02 (Feb), 05 (May), 09 (Sept)
+    '2021': ['01', '02', '03', '05', '06', '07', '09', '10', '11', '12'], // Removed 04 (Apr), 08 (Aug)
+    '2022': ['01', '03', '05', '06', '07', '08', '09', '10', '12'], // Removed 04 (Apr), 11 (Nov)
     '2023': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '11', '12'],
-    '2024': ['01', '02', '03', '04', '05', '06', '07', '08']
+    '2024': ['01', '02', '03', '04', '05', '07', '08'] // Removed 06 (Jun)
   }
   
   // Default to latest available (August 2024)
@@ -368,25 +390,87 @@ export default function TheProject() {
   
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
   const availableMonths = availableData[selectedYear] || []
+  const availableYears = Object.keys(availableData)
 
+  const handleMonthSliderChange = (index: number) => {
+    if (availableMonths[index]) {
+      setSelectedMonth(availableMonths[index])
+    }
+  }
+
+  const handleYearSliderChange = (index: number) => {
+    const year = availableYears[index]
+    setSelectedYear(year)
+    
+    // Try to keep the current month if it exists in the new year
+    const newYearMonths = availableData[year]
+    if (newYearMonths.includes(selectedMonth)) {
+      // Current month exists in new year, keep it
+      setSelectedMonth(selectedMonth)
+    } else {
+      // Current month doesn't exist in new year, set to first available month
+      setSelectedMonth(newYearMonths[0])
+    }
+  }
+
+  const currentMonthIndex = availableMonths.indexOf(selectedMonth)
+  const currentYearIndex = availableYears.indexOf(selectedYear)
   
   return (
     <div className="w-full h-screen flex bg-black overflow-hidden">
       {/* Left - 3D Map (60%) */}
       <div className="w-[60%] h-screen relative">
-        <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between">
-          <button
-            onClick={() => setShowMouseCube(!showMouseCube)}
-            className={`px-4 py-2 rounded-lg border transition-all whitespace-nowrap font-medium text-sm ${
-              showMouseCube 
-                ? 'bg-green-500/20 border-green-500/50 text-green-400 backdrop-blur-sm' 
-                : 'bg-black/50 border-white/20 text-white backdrop-blur-sm hover:border-white/40'
-            }`}
-          >
-            {showMouseCube ? 'Cancel' : 'Añadir Zona Verde'}
-          </button>
+        {/* Date Selector - Top Left */}
+        <div className="absolute top-4 left-4 z-10 bg-black/90 backdrop-blur-sm px-6 py-4 rounded-lg border border-white/20 shadow-lg">
           
-          <div className="flex items-center gap-3 bg-black/50 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20">
+          <div className="flex items-start gap-6">
+            {/* Year Slider */}
+            <div className="flex-1 min-w-[140px]">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-medium text-gray-300">Year</label>
+                <span className="text-sm font-bold text-white">{selectedYear}</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max={availableYears.length - 1}
+                value={currentYearIndex}
+                onChange={(e) => handleYearSliderChange(parseInt(e.target.value))}
+                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+              />
+              <div className="flex justify-between text-xs text-gray-400 mt-1">
+                <span>{availableYears[0]}</span>
+                <span>{availableYears[availableYears.length - 1]}</span>
+              </div>
+            </div>
+            
+            {/* Month Slider */}
+            <div className="flex-1 min-w-[140px]">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-medium text-gray-300">Month</label>
+                <span className="text-sm font-bold text-white">
+                  {monthNames[parseInt(selectedMonth) - 1]}
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max={availableMonths.length - 1}
+                value={currentMonthIndex}
+                onChange={(e) => handleMonthSliderChange(parseInt(e.target.value))}
+                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+              />
+              <div className="flex justify-between text-xs text-gray-400 mt-1">
+                <span>{monthNames[parseInt(availableMonths[0]) - 1]}</span>
+                <span>{monthNames[parseInt(availableMonths[availableMonths.length - 1]) - 1]}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Toggles - Top Right */}
+        <div className="absolute top-4 right-4 z-10 flex items-center gap-3">
+          <div className="flex items-center gap-3 bg-black/80 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20 shadow-lg">
             <span className="text-white text-sm font-medium whitespace-nowrap">3D Model</span>
             <MinimalToggle 
               checked={showModel}
@@ -394,7 +478,7 @@ export default function TheProject() {
             />
           </div>
           
-          <div className="flex items-center gap-3 bg-black/50 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20">
+          <div className="flex items-center gap-3 bg-black/80 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20 shadow-lg">
             <span className="text-white text-sm font-medium whitespace-nowrap">Heatmap</span>
             <MinimalToggle 
               checked={showHeatmap}
@@ -413,35 +497,18 @@ export default function TheProject() {
           <Scene showMouseCube={showMouseCube} onPlaceCube={handlePlaceCube} showModel={showModel} showHeatmap={showHeatmap} selectedMonth={selectedMonth} selectedYear={selectedYear} onTemperatureUpdate={handleTemperatureUpdate} />
         </Canvas>
         
-        {/* Date Selector - Bottom Center */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-4 bg-black/50 backdrop-blur-sm px-6 py-3 rounded-lg border border-white/20">
-          <div className="flex items-center gap-2">
-            <span className="text-white text-sm font-medium whitespace-nowrap">Year:</span>
-            <select
-              value={selectedYear}
-              onChange={(e) => handleYearChange(e.target.value)}
-              className="bg-gray-800 text-white px-3 py-1 rounded border border-white/20 focus:outline-none focus:border-white/40 cursor-pointer"
-            >
-              {Object.keys(availableData).map(year => (
-                <option key={year} value={year}>{year}</option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-white text-sm font-medium whitespace-nowrap">Month:</span>
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="bg-gray-800 text-white px-3 py-1 rounded border border-white/20 focus:outline-none focus:border-white/40 cursor-pointer"
-            >
-              {availableMonths.map(month => (
-                <option key={month} value={month}>
-                  {monthNames[parseInt(month) - 1]}
-                </option>
-              ))}
-            </select>
-          </div>
+        {/* Add Green Zone Button - Bottom Center */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10">
+          <button
+            onClick={() => setShowMouseCube(!showMouseCube)}
+            className={`px-8 py-3 rounded-lg border-2 transition-all whitespace-nowrap font-semibold text-base shadow-lg ${
+              showMouseCube 
+                ? 'bg-green-600 border-green-700 text-white hover:bg-green-700' 
+                : 'bg-green-500 border-green-600 text-white hover:bg-green-600'
+            }`}
+          >
+            {showMouseCube ? '✕ Cancel' : '+ Add Green Zone'}
+          </button>
         </div>
       </div>
       
