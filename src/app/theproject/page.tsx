@@ -20,7 +20,7 @@ function HeatMapBoxes({ placedCylinders, selectedMonth, selectedYear, onTemperat
 
     // Update target opacity when visibility changes
     useEffect(() => {
-        targetOpacity.current = isVisible ? 0.3 : 0
+        targetOpacity.current = isVisible ? 0.4 : 0
     }, [isVisible])
 
     // Animate opacity smoothly
@@ -44,7 +44,7 @@ function HeatMapBoxes({ placedCylinders, selectedMonth, selectedYear, onTemperat
 
     // Load and parse CSV when month or year changes
     useEffect(() => {
-        const fileName = `/processed/data_${selectedMonth}_${selectedYear}.csv`
+        const fileName = `/processed_data/data_${selectedMonth}_${selectedYear}.csv`
         fetch(fileName)
             .then(response => response.text())
             .then(csvText => {
@@ -79,18 +79,12 @@ function HeatMapBoxes({ placedCylinders, selectedMonth, selectedYear, onTemperat
     }, [selectedMonth, selectedYear, onTemperatureUpdate])
 
     // Calculate actual temperature range from the data
-    let minTemp = Infinity
-    let maxTemp = -Infinity
+    let minTemp = 20
+    let maxTemp = 45
     temperatureData.forEach(temp => {
         if (temp < minTemp) minTemp = temp
         if (temp > maxTemp) maxTemp = temp
     })
-    
-    // Fallback to default range if no data
-    if (!isFinite(minTemp) || !isFinite(maxTemp)) {
-        minTemp = 24
-        maxTemp = 56
-    }
 
     const spheres = []
 
@@ -128,19 +122,22 @@ function HeatMapBoxes({ placedCylinders, selectedMonth, selectedYear, onTemperat
                 // Normalize temperature to 0-1 range
                 const normalized = (adjustedTemp - minTemp) / (maxTemp - minTemp)
                 
-                // Color gradient matching HTML visualizer: blue -> cyan -> green -> yellow -> red
-                if (normalized < 0.25) {
+                // Enhanced color gradient with more red for higher temperatures
+                if (normalized < 0.2) {
                     // Blue to Cyan
-                    hue = 240 - (normalized / 0.25) * 60  // 240 to 180
-                } else if (normalized < 0.5) {
+                    hue = 240 - (normalized / 0.2) * 60  // 240 to 180
+                } else if (normalized < 0.4) {
                     // Cyan to Green
-                    hue = 180 - ((normalized - 0.25) / 0.25) * 60  // 180 to 120
-                } else if (normalized < 0.75) {
+                    hue = 180 - ((normalized - 0.2) / 0.2) * 60  // 180 to 120
+                } else if (normalized < 0.6) {
                     // Green to Yellow
-                    hue = 120 - ((normalized - 0.5) / 0.25) * 60  // 120 to 60
+                    hue = 120 - ((normalized - 0.4) / 0.2) * 60  // 120 to 60
+                } else if (normalized < 0.8) {
+                    // Yellow to Orange-Red
+                    hue = 60 - ((normalized - 0.6) / 0.2) * 40  // 60 to 20
                 } else {
-                    // Yellow to Red
-                    hue = 60 - ((normalized - 0.75) / 0.25) * 60  // 60 to 0
+                    // Orange-Red to Deep Red
+                    hue = 20 - ((normalized - 0.8) / 0.2) * 20  // 20 to 0
                 }
             }
             
@@ -150,7 +147,7 @@ function HeatMapBoxes({ placedCylinders, selectedMonth, selectedYear, onTemperat
 
             spheres.push(
                 <mesh key={`${lat}-${lon}`} position={[posX, 3 + sphereRadius, posZ]}>
-                    <boxGeometry args={[sphereRadius * 5.7, sphereRadius / 10, sphereRadius * 5]} />
+                    <boxGeometry args={[sphereRadius * 5, sphereRadius / 10, sphereRadius * 6.08]} />
                     <meshBasicMaterial 
                         color={color} 
                         transparent 
@@ -193,7 +190,7 @@ function PlacedCubes({ cubes }: { cubes: THREE.Vector3[] }) {
       {cubes.map((position, index) => (
         <mesh key={index} position={position}>
           <cylinderGeometry args={[2.5, 2.5, 10, 32]} />
-          <meshBasicMaterial color="green" transparent opacity={0.5} />
+          <meshBasicMaterial color="green" transparent opacity={0.7} />
         </mesh>
       ))}
     </>
@@ -232,8 +229,8 @@ function MouseFollowCube({ isActive, onPlace }: { isActive: boolean, onPlace: (p
   
   return (
     <mesh ref={meshRef} position={[0, -2, 0]} onClick={handleClick}>
-      <cylinderGeometry args={[2.5, 2.5, 5, 32]} />
-      <meshBasicMaterial color="green" transparent opacity={0.3} />
+      <cylinderGeometry args={[2.5, 2.5, 2, 32]} />
+      <meshBasicMaterial color="green" transparent opacity={1} />
     </mesh>
   )
 }
