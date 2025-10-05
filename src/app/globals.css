@@ -5,6 +5,15 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Force arrow cursor everywhere */
+* {
+  cursor: default !important;
+}
+
+a, button {
+  cursor: pointer !important;
+}
+
 .backdrop-blur {
   backdrop-filter: blur(8px);
 }

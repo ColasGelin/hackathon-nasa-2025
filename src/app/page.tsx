@@ -21,19 +21,19 @@ export default function Home() {
         <div className="relative z-10">
           
           {/* Problem Section */}
-          <section id="problem" className="py-16 px-4">
-            <div className="max-w-6xl mx-auto">
-              <InteractiveH2 className="text-white drop-shadow-lg">The Urban Heat Island Problem</InteractiveH2>
+          <section id="problem" className="min-h-screen flex items-center justify-center py-20 px-4">
+            <div className="max-w-7xl mx-auto w-full">
+              <InteractiveH2 className="text-white drop-shadow-lg mb-16">The Urban Heat Island Problem</InteractiveH2>
               
               {/* Stats Grid */}
-              <div className="grid md:grid-cols-3 gap-6 mb-12">
+              <div className="grid md:grid-cols-3 gap-8 mb-16">
                 {stats.map((stat, index) => (
                   <StatCard key={index} value={stat.value} label={stat.label} variant="danger" />
                 ))}
               </div>
               
               {/* Impacts Grid */}
-              <div className="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+              <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
                 {impacts.map((impact, index) => (
                   <div key={index} className="flex items-center p-3 bg-red-900/40 rounded-lg border border-red-700/50 hover:border-red-500/50 hover:bg-red-900/50 transition-all duration-300 group backdrop-blur-sm">
                     <div className="w-2 h-2 bg-red-400 rounded-full mr-3 group-hover:bg-red-300 transition-colors"></div>
@@ -45,17 +45,17 @@ export default function Home() {
           </section>
           
           {/* Solution Section */}
-          <section id="solution" className="py-16 px-4">
-            <div className="max-w-6xl mx-auto">
-              <InteractiveH2 className="text-white drop-shadow-lg">Our AI Solution</InteractiveH2>
+          <section id="solution" className="min-h-screen flex items-center justify-center py-20 px-4">
+            <div className="max-w-7xl mx-auto w-full">
+              <InteractiveH2 className="text-white drop-shadow-lg mb-20">Our AI Solution</InteractiveH2>
               
-              <div className="grid md:grid-cols-3 gap-8">
+              <div className="grid md:grid-cols-3 gap-12 mb-20">
                 {solutionPillars.map((pillar, index) => (
                   <Card 
                     key={index}
                     title={pillar.title}
                     description={pillar.description}
-                    variant="info"
+                    variant="success"
                     icon={
                       <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
                         {pillar.icon === 'satellite' && <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>}
@@ -68,33 +68,33 @@ export default function Home() {
               </div>
               
               {/* Data Flow Diagram */}
-              <div className="flex items-center justify-center mt-12 space-x-8 text-center flex-wrap">
-                <div className="p-4 bg-blue-600/80 rounded-lg hover:bg-blue-500 transition-all duration-300 hover:scale-105 hover:-translate-y-1 backdrop-blur-sm">Satellite Data</div>
-                <div className="text-blue-200 animate-pulse">→</div>
-                <div className="p-4 bg-blue-500/80 rounded-lg hover:bg-blue-400 transition-all duration-300 hover:scale-105 hover:-translate-y-1 backdrop-blur-sm">Predictive AI</div>
-                <div className="text-blue-200 animate-pulse">→</div>
-                <div className="p-4 bg-blue-400/80 rounded-lg hover:bg-blue-300 transition-all duration-300 hover:scale-105 hover:-translate-y-1 backdrop-blur-sm">Urban Decisions</div>
+              <div className="flex items-center justify-center space-x-12 text-center flex-wrap">
+                <div className="px-8 py-6 bg-green-600/80 rounded-xl hover:bg-green-500 transition-all duration-300 backdrop-blur-sm text-lg font-semibold">Satellite Data</div>
+                <div className="text-green-200 animate-pulse text-2xl">→</div>
+                <div className="px-8 py-6 bg-green-500/80 rounded-xl hover:bg-green-400 transition-all duration-300 backdrop-blur-sm text-lg font-semibold">Predictive AI</div>
+                <div className="text-green-200 animate-pulse text-2xl">→</div>
+                <div className="px-8 py-6 bg-green-400/80 rounded-xl hover:bg-green-300 transition-all duration-300 backdrop-blur-sm text-lg font-semibold">Urban Decisions</div>
               </div>
             </div>
           </section>
           
           {/* Malaga Case Study */}
-          <section id="malaga" className="py-16 px-4">
-            <div className="max-w-6xl mx-auto">
-              <InteractiveH2 className="text-white drop-shadow-lg">Case Study: Málaga</InteractiveH2>
+          <section id="malaga" className="min-h-screen flex items-center justify-center py-20 px-4">
+            <div className="max-w-7xl mx-auto w-full">
+              <InteractiveH2 className="text-white drop-shadow-lg mb-16">Case Study: Málaga</InteractiveH2>
               
-              <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div className="grid lg:grid-cols-2 gap-16 items-center">
                 <div className="group">
-                  <div className="aspect-video bg-green-900/50 rounded-lg flex items-center justify-center border border-green-700/50 mb-4 hover:border-green-500/50 transition-all duration-300 group-hover:scale-105 backdrop-blur-sm">
+                  <div className="aspect-video bg-blue-900/50 rounded-lg flex items-center justify-center border border-blue-700/50 mb-4 hover:border-blue-500/50 hover:bg-blue-900/60 transition-all duration-300 backdrop-blur-sm">
                     <span className="text-white/90 group-hover:text-white transition-colors">Málaga thermal map</span>
                   </div>
                   <p className="text-white/80 text-center group-hover:text-white transition-colors">Heat island mapping before intervention</p>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-6">
                   {malagaSolutions.map((solution, index) => (
-                    <div key={index} className="p-4 bg-green-900/50 border border-green-700/50 rounded-lg hover:border-green-400 hover:bg-green-900/60 transition-all duration-300 group hover:scale-105 hover:-translate-y-1 backdrop-blur-sm">
-                      <h4 className="font-semibold mb-2 text-green-200 group-hover:text-green-100 transition-colors">{solution.title}</h4>
+                    <div key={index} className="p-4 bg-blue-900/50 border border-blue-700/50 rounded-lg hover:border-blue-400 hover:bg-blue-900/60 transition-all duration-300 group backdrop-blur-sm">
+                      <h4 className="font-semibold mb-2 text-blue-200 group-hover:text-blue-100 transition-colors">{solution.title}</h4>
                       <p className="text-sm text-white/80 group-hover:text-white transition-colors">{solution.impact}</p>
                     </div>
                   ))}
