@@ -60,12 +60,12 @@ export default function CaseStudies() {
       {/* Medellín Case Study Section */}
       <section className="min-h-screen flex items-center justify-center py-20 px-4">
         <div className="max-w-7xl mx-auto w-full">
-          <InteractiveH2 className="text-white drop-shadow-lg mb-16">Medellín's Green Corridors</InteractiveH2>
+          <InteractiveH2 className="text-white drop-shadow-lg mb-16">Medellín&apos;s Green Corridors</InteractiveH2>
           
           <div className="max-w-5xl mx-auto space-y-8">
             <div className="text-lg md:text-xl leading-relaxed text-slate-300 space-y-6">
               <p>
-                <strong className="text-white">Medellín</strong>, once one of Colombia's most polluted and heat-stressed cities, has become an international example of how green infrastructure can transform the urban climate. Beginning in 2016, the city launched the <strong className="text-white">"Green Corridors"</strong> program, a large-scale initiative connecting 18 major roads, 12 riverbanks, and over 120 parks with continuous vegetation and shade networks.
+                <strong className="text-white">Medellín</strong>, once one of Colombia&apos;s most polluted and heat-stressed cities, has become an international example of how green infrastructure can transform the urban climate. Beginning in 2016, the city launched the <strong className="text-white">&quot;Green Corridors&quot;</strong> program, a large-scale initiative connecting 18 major roads, 12 riverbanks, and over 120 parks with continuous vegetation and shade networks.
               </p>
               
               <p>
@@ -111,7 +111,7 @@ export default function CaseStudies() {
               </p>
               
               <p>
-                The <strong className="text-white">"Green Corridors"</strong> of Medellín are now considered a reference model for climate adaptation and inclusive urban planning: combining data-driven design, ecological restoration, and social inclusion.
+                The <strong className="text-white">&quot;Green Corridors&quot;</strong> of Medellín are now considered a reference model for climate adaptation and inclusive urban planning: combining data-driven design, ecological restoration, and social inclusion.
               </p>
             </div>
           </div>
@@ -121,12 +121,12 @@ export default function CaseStudies() {
       {/* Singapore Case Study Section */}
       <section className="min-h-screen flex items-center justify-center py-20 px-4">
         <div className="max-w-7xl mx-auto w-full">
-          <InteractiveH2 className="text-white drop-shadow-lg mb-16">Singapore's Urban Greening Strategy</InteractiveH2>
+          <InteractiveH2 className="text-white drop-shadow-lg mb-16">Singapore&apos;s Urban Greening Strategy</InteractiveH2>
           
           <div className="max-w-5xl mx-auto space-y-8">
             <div className="text-lg md:text-xl leading-relaxed text-slate-300 space-y-6">
               <p>
-                <strong className="text-white">Singapore</strong> has become a world leader in integrating nature into a dense urban environment. Since the 1960s, the government has pursued a long-term vision known as <strong className="text-white">"City in a Garden"</strong>, later evolved into <strong className="text-white">"City in Nature"</strong>, aiming to weave greenery into every part of the city.
+                <strong className="text-white">Singapore</strong> has become a world leader in integrating nature into a dense urban environment. Since the 1960s, the government has pursued a long-term vision known as <strong className="text-white">&quot;City in a Garden&quot;</strong>, later evolved into <strong className="text-white">&quot;City in Nature&quot;</strong>, aiming to weave greenery into every part of the city.
               </p>
               
               <p>
@@ -146,7 +146,7 @@ export default function CaseStudies() {
               </p>
               
               <p>
-                Singapore's approach demonstrates that systematic, data-driven greening can make even a compact, tropical metropolis more livable, resilient, and sustainable — turning heat into habitability.
+                Singapore&apos;s approach demonstrates that systematic, data-driven greening can make even a compact, tropical metropolis more livable, resilient, and sustainable — turning heat into habitability.
               </p>
             </div>
             

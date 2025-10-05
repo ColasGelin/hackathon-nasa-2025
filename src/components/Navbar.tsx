@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
+import Link from 'next/link'
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
@@ -20,7 +21,7 @@ export default function Navbar() {
         : 'bg-transparent'
     }`}>
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-        <a 
+        <Link 
           href="/" 
           className={`text-xl font-bold transition-colors ${
             pathname === '/' 
@@ -29,10 +30,10 @@ export default function Navbar() {
           }`}
         >
           Urban Heat Monitor
-        </a>
+        </Link>
         
                 <div className="hidden md:flex space-x-8">
-          <a 
+          <Link 
             href="/who-are-we" 
             className={`transition-colors ${
               pathname === '/who-are-we' 
@@ -41,8 +42,8 @@ export default function Navbar() {
             }`}
           >
             Who are we
-          </a>
-          <a 
+          </Link>
+          <Link 
             href="/problem-analysis" 
             className={`transition-colors ${
               pathname === '/problem-analysis' 
@@ -51,8 +52,8 @@ export default function Navbar() {
             }`}
           >
             Problem Analysis
-          </a>
-          <a 
+          </Link>
+          <Link 
             href="/case-studies" 
             className={`transition-colors ${
               pathname === '/case-studies' 
@@ -61,8 +62,8 @@ export default function Navbar() {
             }`}
           >
             Case Studies
-          </a>
-          <a 
+          </Link>
+          <Link 
             href="/technical-documentation" 
             className={`transition-colors ${
               pathname === '/technical-documentation' 
@@ -71,8 +72,8 @@ export default function Navbar() {
             }`}
           >
             Technical Documentation
-          </a>
-          <a 
+          </Link>
+          <Link 
             href="/business-plan" 
             className={`transition-colors ${
               pathname === '/business-plan' 
@@ -81,10 +82,10 @@ export default function Navbar() {
             }`}
           >
             Business Plan
-          </a>
+          </Link>
         </div>
         
-        <a 
+        <Link 
           href="/theproject" 
           className={`px-4 py-2 rounded-lg transition-colors ${
             pathname === '/theproject' 
@@ -93,7 +94,7 @@ export default function Navbar() {
           }`}
         >
           Demo
-        </a>
+        </Link>
       </div>
     </nav>
   )

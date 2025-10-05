@@ -86,7 +86,7 @@ export default function ProblemAnalysis() {
               
               <div className="p-6 bg-orange-900/30 rounded-lg border border-orange-700/50 hover:border-orange-500/50 hover:bg-orange-900/40 transition-all duration-300 min-h-[140px] flex flex-col">
                 <h4 className="font-semibold mb-3 text-orange-300">Descriptive vs Predictive</h4>
-                <p className="text-slate-300 flex-1">Most tools show today's situation, not tomorrow's predictions.</p>
+                <p className="text-slate-300 flex-1">Most tools show today&apos;s situation, not tomorrow&apos;s predictions.</p>
               </div>
               
               <div className="p-6 bg-yellow-900/30 rounded-lg border border-yellow-700/50 hover:border-yellow-500/50 hover:bg-yellow-900/40 transition-all duration-300 min-h-[140px] flex flex-col">

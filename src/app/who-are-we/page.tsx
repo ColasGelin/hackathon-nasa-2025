@@ -38,7 +38,7 @@ export default function WhoAreWe() {
               </p>
               
               <p>
-                Through an interactive web map, users can test different urban scenarios and see how design choices influence the city's environment. It offers simple tools for planners and citizens to make informed, sustainable decisions.
+                Through an interactive web map, users can test different urban scenarios and see how design choices influence the city&apos;s environment. It offers simple tools for planners and citizens to make informed, sustainable decisions.
               </p>
               
               <p>

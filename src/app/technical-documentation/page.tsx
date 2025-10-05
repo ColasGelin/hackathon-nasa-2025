@@ -58,7 +58,7 @@ export default function TechnicalDocumentation() {
                 <h4 className="text-lg font-semibold text-white mb-4">Vegetation Indices</h4>
                 <ul className="space-y-3 text-slate-300">
                   <li>• <strong className="text-white">30-meter resolution</strong> NDVI and other vegetation indices</li>
-                  <li>• Updates every <strong className="text-white">2-3 days</strong> (vs Landsat's 16 days)</li>
+                  <li>• Updates every <strong className="text-white">2-3 days</strong> (vs Landsat&apos;s 16 days)</li>
                   <li>• <strong className="text-white">Harmonized</strong> between Landsat and Sentinel-2 = consistent measurements</li>
                   <li>• Direct measure of <strong className="text-white">vegetation health and density</strong></li>
                 </ul>
@@ -200,11 +200,11 @@ export default function TechnicalDocumentation() {
             <div className="bg-gradient-to-r from-slate-800/50 to-slate-700/50 p-8 rounded-lg border border-slate-600/50">
               <div className="text-lg leading-relaxed text-slate-300 space-y-6">
                 <p>
-                  For this <strong className="text-white">Proof of Concept</strong>, we're using data from <strong className="text-blue-400">Landsat Collection 2 (100m resolution)</strong>, mapping it to a <strong className="text-green-400">3D model of the city of Málaga</strong>.
+                  For this <strong className="text-white">Proof of Concept</strong>, we&apos;re using data from <strong className="text-blue-400">Landsat Collection 2 (100m resolution)</strong>, mapping it to a <strong className="text-green-400">3D model of the city of Málaga</strong>.
                 </p>
                 
                 <p>
-                  This 3D model leverages <strong className="text-white">OpenStreetMap's open-source geographic data</strong>, enabling us to generate accurate 3D representations of any city worldwide and seamlessly import them into <strong className="text-purple-400">Blender</strong> for visualization and further development.
+                  This 3D model leverages <strong className="text-white">OpenStreetMap&apos;s open-source geographic data</strong>, enabling us to generate accurate 3D representations of any city worldwide and seamlessly import them into <strong className="text-purple-400">Blender</strong> for visualization and further development.
                 </p>
                 
                 <p>

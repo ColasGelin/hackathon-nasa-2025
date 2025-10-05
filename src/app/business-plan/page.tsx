@@ -56,7 +56,7 @@ export default function BusinessPlan() {
                   <ul className="text-slate-300 space-y-2 text-sm">
                     <li>• Supports municipalities in climate adaptation planning</li>
                     <li>• Helps engineers assess environmental performance</li>
-                    <li>• Enables citizens to find "cool and clean" areas</li>
+                    <li>• Enables citizens to find &quot;cool and clean&quot; areas</li>
                     <li>• <strong className="text-white">SaaS + API + consulting</strong></li>
                   </ul>
                 </div>
@@ -111,9 +111,9 @@ export default function BusinessPlan() {
                   <div>
                     <h4 className="text-lg font-semibold text-blue-300 mb-3">Our Solution</h4>
                     <ul className="space-y-2 text-slate-300 text-sm">
-                      <li>• Predict 10-year evolution of temperature & pollution</li>
-                      <li>• Simulate impacts of vegetation & materials</li>
-                      <li>• Web map + API + mobile "Cool City" mode</li>
+                      <li>• Predict 10-year evolution of temperature &amp; pollution</li>
+                      <li>• Simulate impacts of vegetation &amp; materials</li>
+                      <li>• Web map + API + mobile &quot;Cool City&quot; mode</li>
                     </ul>
                   </div>
                 </div>
@@ -241,7 +241,7 @@ export default function BusinessPlan() {
                   </div>
                   
                   <div className="bg-slate-800/50 p-6 rounded-lg">
-                    <h4 className="text-lg font-bold text-orange-300 mb-3">"Cool City" Portal</h4>
+                    <h4 className="text-lg font-bold text-orange-300 mb-3">&quot;Cool City&quot; Portal</h4>
                     <p className="text-slate-300 text-sm mb-2">Citizen web/mobile access → Public</p>
                     <p className="text-blue-400 font-bold">Funded by grants/ads</p>
                   </div>
