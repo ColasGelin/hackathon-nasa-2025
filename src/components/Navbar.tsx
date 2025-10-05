@@ -16,19 +16,16 @@ export default function Navbar() {
       scrolled ? 'bg-slate-900/80 backdrop-blur' : 'bg-transparent'
     }`}>
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="text-xl font-bold text-white">
+        <a href="/" className="text-xl font-bold text-white hover:text-slate-200 transition-colors">
           Urban Heat Monitor
-        </div>
+        </a>
         
-        <div className="hidden md:flex space-x-8">
-          <a href="#problem" className="text-slate-300 hover:text-white transition-colors">
-            Problem
+                <div className="hidden md:flex space-x-8">
+          <a href="/who-are-we" className="text-slate-300 hover:text-white transition-colors">
+            Who are we
           </a>
-          <a href="#solution" className="text-slate-300 hover:text-white transition-colors">
-            Solution
-          </a>
-          <a href="#malaga" className="text-slate-300 hover:text-white transition-colors">
-            Málaga
+          <a href="/case-studies" className="text-slate-300 hover:text-white transition-colors">
+            Case Studies
           </a>
         </div>
         
