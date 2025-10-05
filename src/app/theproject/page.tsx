@@ -1,10 +1,10 @@
 'use client'
 
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { OrbitControls, Text, Environment, useGLTF, Html } from '@react-three/drei'
+import { OrbitControls, Text, Environment, useGLTF } from '@react-three/drei'
 import { useState, useRef, useEffect } from 'react'
 import * as THREE from 'three'
-import { MinimalToggle, OrangeToggle } from '@/components/ui/toggle'
+import { MinimalToggle} from '@/components/ui/toggle'
 
 function HeatMapBoxes({ placedCylinders, selectedMonth, selectedYear, onTemperatureUpdate, isVisible }: { placedCylinders: THREE.Vector3[], selectedMonth: string, selectedYear: string, onTemperatureUpdate?: (avgTemp: number) => void, isVisible: boolean }) {
     const [temperatureData, setTemperatureData] = useState<Map<string, number>>(new Map())
@@ -78,13 +78,9 @@ function HeatMapBoxes({ placedCylinders, selectedMonth, selectedYear, onTemperat
             })
     }, [selectedMonth, selectedYear, onTemperatureUpdate])
 
-    // Calculate actual temperature range from the data
-    let minTemp = 20
-    let maxTemp = 45
-    temperatureData.forEach(temp => {
-        if (temp < minTemp) minTemp = temp
-        if (temp > maxTemp) maxTemp = temp
-    })
+    // Fixed temperature range for consistent colors across all datasets
+    const minTemp = 20
+    const maxTemp = 45
 
     const spheres = []
 
@@ -107,19 +103,31 @@ function HeatMapBoxes({ placedCylinders, selectedMonth, selectedYear, onTemperat
                 const posZ = (lat - gridHeight / 2) * (220 / gridHeight)
                 const spherePos = new THREE.Vector3(posX, 3 + sphereRadius, posZ)
                 
-                // Check cylinder cooling effects
+                // Check cylinder cooling effects with distance-based falloff
                 let coolingEffect = 0
                 for (const cylinderPos of placedCylinders) {
                     const distance = spherePos.distanceTo(cylinderPos)
-                    if (distance <= 10) {
-                        coolingEffect += 5
+                    
+                    // Distance-based cooling: -5°C at base, gradually decreasing to 0 at distance > 25 units
+                    // Each "case" is approximately 5 units (250/gridWidth ≈ 2.66, so 5 units ≈ 2 grid cells)
+                    if (distance < 5) {
+                        coolingEffect += 5  // Very close: max cooling
+                    } else if (distance < 10) {
+                        coolingEffect += 4
+                    } else if (distance < 15) {
+                        coolingEffect += 3
+                    } else if (distance < 20) {
+                        coolingEffect += 2
+                    } else if (distance < 25) {
+                        coolingEffect += 1
                     }
+                    // Beyond 25 units (5 cases): no effect
                 }
                 
                 // Apply cooling effect but don't go below minimum temperature
                 adjustedTemp = Math.max(adjustedTemp - coolingEffect, minTemp)
                 
-                // Normalize temperature to 0-1 range
+                // Normalize temperature to 0-1 range using fixed min/max
                 const normalized = (adjustedTemp - minTemp) / (maxTemp - minTemp)
                 
                 // Enhanced color gradient with more red for higher temperatures
@@ -218,7 +226,7 @@ function MouseFollowCube({ isActive, onPlace }: { isActive: boolean, onPlace: (p
     }
   })
   
-  const handleClick = (event: any) => {
+  const handleClick = (event: React.MouseEvent) => {
     if (isActive && meshRef.current) {
       event.stopPropagation()
       onPlace(meshRef.current.position.clone())
@@ -322,7 +330,7 @@ interface CityStats {
   }
 }
 
-function StatCard({ title, value, unit, description, icon, color }: { title: string, value: number, unit: string, description: string, icon: string, color: string }) {
+function StatCard({ title, value, unit, description, color }: { title: string, value: number, unit: string, description: string, icon: string, color: string }) {
   return (
     <div className="group transition-all duration-300 hover:scale-105 bg-black/80 backdrop-blur-sm p-4 rounded-lg border border-white/20 shadow-lg">
       <div className="flex items-baseline justify-between mb-2">
@@ -361,26 +369,24 @@ function VegetationBar({ value }: { value: number }) {
 export default function TheProject() {
   const [showMouseCube, setShowMouseCube] = useState(false)
   const [cityStats, setCityStats] = useState<CityStats | null>(null)
-  const [showModel, setShowModel] = useState(true)
   const [showHeatmap, setShowHeatmap] = useState(true)
   const [averageTemperature, setAverageTemperature] = useState<number>(18.5)
-  const [showDataWarning, setShowDataWarning] = useState(false)
   const [placedZonesCount, setPlacedZonesCount] = useState(0)
   const [resetTrigger, setResetTrigger] = useState(0)
   
   // Available data mapping: year -> array of available months
   const availableData: Record<string, string[]> = {
-    '2014': ['01', '03', '04', '05', '07', '08', '09', '10', '11', '12'], // Removed 06 (Jun)
-    '2015': ['01', '02', '03', '05', '06', '09', '11', '12'], // Removed 07 (Jul), 08 (Aug), 10 (Oct)
-    '2016': ['01', '02', '05', '06', '07', '09', '10', '11', '12'], // Removed 03 (Mar), 04 (Apr), 08 (Aug)
+    '2014': ['01', '03', '04', '05', '07', '08', '09'], // Removed 06 (Jun), 10 (Oct), 11 (Nov), 12 (Dec)
+    '2015': ['01', '03', '05', '06', '09', '11'], // Removed 02 (Feb), 07 (Jul), 08 (Aug), 10 (Oct), 12 (Dec)
+    '2016': ['01', '05', '06', '07', '09', '10'], // Removed 02 (Feb), 03 (Mar), 04 (Apr), 08 (Aug), 11 (Nov), 12 (Dec)
     '2017': ['01', '02', '03', '04', '06', '08', '09', '10', '11', '12'], // Removed 05 (May), 07 (Jul)
-    '2018': ['01', '02', '04', '05', '06', '07', '09', '11', '12'], // Removed 03 (Mar), 08 (Aug), 10 (Oct)
-    '2019': ['01', '02', '03', '04', '05', '06', '07', '08', '11', '12'], // Removed 09 (Sept), 10 (Oct)
-    '2020': ['01', '04', '06', '07', '08', '11', '12'], // Removed 02 (Feb), 05 (May), 09 (Sept)
-    '2021': ['01', '02', '03', '05', '06', '07', '09', '10', '11', '12'], // Removed 04 (Apr), 08 (Aug)
-    '2022': ['01', '03', '05', '06', '07', '08', '09', '10', '12'], // Removed 04 (Apr), 11 (Nov)
-    '2023': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '11', '12'],
-    '2024': ['01', '02', '03', '04', '05', '07', '08'] // Removed 06 (Jun)
+    '2018': ['01', '02', '04', '06', '07', '09'], // Removed 03 (Mar), 05 (May), 08 (Aug), 10 (Oct), 11 (Nov), 12 (Dec)
+    '2019': ['01', '02', '03', '04', '05', '06', '07', '08', '12'], // Removed 09 (Sept), 10 (Oct), 11 (Nov)
+    '2020': ['01', '04', '06', '07', '08', '12'], // Removed 02 (Feb), 05 (May), 09 (Sept), 11 (Nov)
+    '2021': ['01', '02', '03', '05', '06', '07', '09', '10'], // Removed 04 (Apr), 08 (Aug), 11 (Nov), 12 (Dec)
+    '2022': ['01', '03', '05', '06', '07', '08', '09', '10'], // Removed 04 (Apr), 11 (Nov), 12 (Dec)
+    '2023': ['01', '03', '04', '05', '06', '07', '08', '09', '11'], // Removed 02 (Feb), 12 (Dec)
+    '2024': ['02', '04', '07', '08'] // Removed 01 (Jan), 03 (Mar), 05 (May), 06 (Jun)
   }
   
   // Default to latest available (August 2024)
@@ -393,7 +399,7 @@ export default function TheProject() {
       .then(data => setCityStats(data))
   }, [])
   
-  const handlePlaceCube = (position: THREE.Vector3) => {
+  const handlePlaceCube = () => {
     setShowMouseCube(false)
     setPlacedZonesCount(prev => prev + 1)
   }
@@ -402,13 +408,6 @@ export default function TheProject() {
     setPlacedZonesCount(0)
     setResetTrigger(prev => prev + 1) // Trigger reset without remounting Canvas
     setShowMouseCube(false)
-  }
-  
-  const handleYearChange = (year: string) => {
-    setSelectedYear(year)
-    // Set to first available month of the new year
-    const firstMonth = availableData[year][0]
-    setSelectedMonth(firstMonth)
   }
   
   const handleTemperatureUpdate = (avgTemp: number) => {
@@ -427,7 +426,6 @@ export default function TheProject() {
 
   const handleYearSliderChange = (index: number) => {
     const year = availableYears[index]
-    const previousMonth = selectedMonth
     setSelectedYear(year)
     
     // Try to keep the current month if it exists in the new year
@@ -435,10 +433,8 @@ export default function TheProject() {
     if (newYearMonths.includes(selectedMonth)) {
       // Current month exists in new year, keep it
       setSelectedMonth(selectedMonth)
-      setShowDataWarning(false)
     } else {
       // Current month doesn't exist in new year, show warning
-      setShowDataWarning(true)
       
       // Find the closest previous month that exists
       const currentMonthNum = parseInt(selectedMonth)
@@ -455,9 +451,6 @@ export default function TheProject() {
       setSelectedMonth(closestMonth)
       
       // Hide warning after 3 seconds
-      setTimeout(() => {
-        setShowDataWarning(false)
-      }, 3000)
     }
   }
 
@@ -468,13 +461,6 @@ export default function TheProject() {
     <div className="w-full h-screen flex bg-black overflow-hidden">
       {/* Left - 3D Map (60%) */}
       <div className="w-[60%] h-screen relative">
-        {/* Data Unavailable Warning */}
-        {showDataWarning && (
-          <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 bg-orange-900/90 backdrop-blur-sm px-6 py-3 rounded-lg border border-orange-500/50 shadow-lg animate-fade-in">
-            <p className="text-white text-sm font-semibold">⚠️ No data available for the selected month in {selectedYear}</p>
-          </div>
-        )}
-
         {/* Date Selector - Top Left */}
         <div className="absolute top-4 left-4 z-10 bg-black/90 backdrop-blur-sm px-6 py-4 rounded-lg border border-white/20 shadow-lg">
           
@@ -526,14 +512,6 @@ export default function TheProject() {
         {/* Toggles - Top Right */}
         <div className="absolute top-4 right-4 z-10 flex items-center gap-3">
           <div className="flex items-center gap-3 bg-black/80 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20 shadow-lg">
-            <span className="text-white text-sm font-medium whitespace-nowrap">3D Model</span>
-            <MinimalToggle 
-              checked={showModel}
-              onChange={(e) => setShowModel(e.target.checked)}
-            />
-          </div>
-          
-          <div className="flex items-center gap-3 bg-black/80 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20 shadow-lg">
             <span className="text-white text-sm font-medium whitespace-nowrap">Heatmap</span>
             <MinimalToggle 
               checked={showHeatmap}
@@ -552,7 +530,7 @@ export default function TheProject() {
           <Scene 
             showMouseCube={showMouseCube} 
             onPlaceCube={handlePlaceCube} 
-            showModel={showModel} 
+            showModel={true}
             showHeatmap={showHeatmap} 
             selectedMonth={selectedMonth} 
             selectedYear={selectedYear} 
