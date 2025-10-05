@@ -78,9 +78,13 @@ function HeatMapBoxes({ placedCylinders, selectedMonth, selectedYear, onTemperat
             })
     }, [selectedMonth, selectedYear, onTemperatureUpdate])
 
-    // Fixed temperature range for consistent colors across all datasets
-    const minTemp = 20
-    const maxTemp = 45
+    // Calculate actual temperature range from the data
+    let minTemp = 20
+    let maxTemp = 45
+    temperatureData.forEach(temp => {
+        if (temp < minTemp) minTemp = temp
+        if (temp > maxTemp) maxTemp = temp
+    })
 
     const spheres = []
 
@@ -121,13 +125,14 @@ function HeatMapBoxes({ placedCylinders, selectedMonth, selectedYear, onTemperat
                     } else if (distance < 25) {
                         coolingEffect += 1
                     }
+                    // else: distance >= 6, no cooling added
                     // Beyond 25 units (5 cases): no effect
                 }
                 
                 // Apply cooling effect but don't go below minimum temperature
                 adjustedTemp = Math.max(adjustedTemp - coolingEffect, minTemp)
                 
-                // Normalize temperature to 0-1 range using fixed min/max
+                // Normalize temperature to 0-1 range
                 const normalized = (adjustedTemp - minTemp) / (maxTemp - minTemp)
                 
                 // Enhanced color gradient with more red for higher temperatures
