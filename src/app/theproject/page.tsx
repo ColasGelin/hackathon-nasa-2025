@@ -620,6 +620,3 @@ export default function TheProject() {
     </div>
   );
 }
-
-// Add this at the very bottom of your file, after the component
-useGLTF.preload('/models/malaga/scene.glb')
